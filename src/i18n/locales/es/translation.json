@@ -536,7 +536,8 @@
       "title": "Acerca de",
       "version": {
         "title": "Versión",
-        "description": "Versión actual de VozImperio"
+        "description": "Versión actual de VozImperio",
+        "imperioVersion": "Versión Imperio 1"
       },
       "appDataDirectory": {
         "title": "Directorio de Datos de la Aplicación",

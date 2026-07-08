@@ -95,11 +95,7 @@ pub fn tray_tooltip() -> String {
 }
 
 fn version_label() -> String {
-    if cfg!(debug_assertions) {
-        format!("Handy v{} (Dev)", env!("CARGO_PKG_VERSION"))
-    } else {
-        format!("Handy v{}", env!("CARGO_PKG_VERSION"))
-    }
+    "VozImperio v1".to_string()
 }
 
 pub fn update_tray_menu(app: &AppHandle, state: &TrayIconState, locale: Option<&str>) {

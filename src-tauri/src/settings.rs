@@ -402,7 +402,7 @@ pub struct AppSettings {
     pub post_process_prompts: Vec<LLMPrompt>,
     #[serde(default)]
     pub post_process_selected_prompt_id: Option<String>,
-    #[serde(default)]
+    #[serde(default = "default_mute_while_recording")]
     pub mute_while_recording: bool,
     #[serde(default)]
     pub append_trailing_space: bool,
@@ -463,7 +463,11 @@ fn default_start_hidden() -> bool {
 }
 
 fn default_autostart_enabled() -> bool {
-    false
+    true
+}
+
+fn default_mute_while_recording() -> bool {
+    true
 }
 
 fn default_update_checks_enabled() -> bool {
@@ -479,7 +483,7 @@ fn default_whats_new_last_seen_version() -> String {
 }
 
 fn default_selected_language() -> String {
-    "auto".to_string()
+    "es".to_string()
 }
 
 fn default_overlay_position() -> OverlayPosition {
@@ -542,9 +546,7 @@ fn default_post_process_enabled() -> bool {
 }
 
 fn default_app_language() -> String {
-    tauri_plugin_os::locale()
-        .map(|l| l.replace('_', "-"))
-        .unwrap_or_else(|| "en".to_string())
+    "es".to_string()
 }
 
 fn default_show_tray_icon() -> bool {
@@ -802,7 +804,7 @@ pub fn get_default_settings() -> AppSettings {
         settings_schema_version: default_settings_schema_version(),
         bindings,
         push_to_talk: true,
-        audio_feedback: false,
+        audio_feedback: true,
         audio_feedback_volume: default_audio_feedback_volume(),
         sound_theme: default_sound_theme(),
         start_hidden: default_start_hidden(),
@@ -817,7 +819,7 @@ pub fn get_default_settings() -> AppSettings {
         clamshell_microphone: None,
         selected_output_device: None,
         translate_to_english: false,
-        selected_language: "auto".to_string(),
+        selected_language: "es".to_string(),
         overlay_position: default_overlay_position(),
         debug_mode: false,
         log_level: default_log_level(),
@@ -837,7 +839,7 @@ pub fn get_default_settings() -> AppSettings {
         post_process_models: default_post_process_models(),
         post_process_prompts: default_post_process_prompts(),
         post_process_selected_prompt_id: None,
-        mute_while_recording: false,
+        mute_while_recording: true,
         append_trailing_space: false,
         app_language: default_app_language(),
         experimental_enabled: false,

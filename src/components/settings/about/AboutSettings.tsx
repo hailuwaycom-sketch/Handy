@@ -45,8 +45,13 @@ export const AboutSettings: React.FC = () => {
           description={t("settings.about.version.description")}
           grouped={true}
         >
-          {/* eslint-disable-next-line i18next/no-literal-string */}
-          <span className="text-sm font-mono">v{version}</span>
+          <div className="flex flex-col items-end gap-0.5">
+            {/* eslint-disable-next-line i18next/no-literal-string */}
+            <span className="text-sm font-mono">Handy v{version}</span>
+            <span className="text-xs font-mono text-mid-gray">
+              {t("settings.about.version.imperioVersion")}
+            </span>
+          </div>
         </SettingContainer>
 
         <ShowWhatsNewOnUpdate descriptionMode="tooltip" grouped={true} />
