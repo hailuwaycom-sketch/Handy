@@ -13,7 +13,7 @@ use cpal::{
 };
 
 use crate::audio_toolkit::{
-    audio::{AudioVisualiser, FrameResampler},
+    audio::{AudioVisualiser, FrameResampler, NoiseSuppressor},
     constants,
     vad::{self, VadFrame},
     VoiceActivityDetector,
@@ -23,7 +23,7 @@ enum Cmd {
     /// Begin capturing. Carries the send timestamp so the consumer can log how
     /// long the command sat in the channel (and how much audio was dropped
     /// before it was seen).
-    Start(VadPolicy, Instant),
+    Start(VadPolicy, bool, Instant),
     Stop(mpsc::Sender<Vec<f32>>),
     Shutdown,
 }
@@ -316,9 +316,13 @@ impl AudioRecorder {
         }
     }
 
-    pub fn start(&self, vad_policy: VadPolicy) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn start(
+        &self,
+        vad_policy: VadPolicy,
+        noise_suppression_enabled: bool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(tx) = &self.cmd_tx {
-            tx.send(Cmd::Start(vad_policy, Instant::now()))?;
+            tx.send(Cmd::Start(vad_policy, noise_suppression_enabled, Instant::now()))?;
         }
         Ok(())
     }
@@ -533,6 +537,7 @@ fn run_consumer(
     let mut processed_samples = Vec::<f32>::new();
     let mut recording = false;
     let mut vad_policy = VadPolicy::Offline;
+    let mut noise_suppressor: Option<NoiseSuppressor> = None;
 
     // ---------- latency instrumentation ---------------------------------- //
     // First-chunk arrival exposes the play()->samples-flowing gap; the
@@ -562,17 +567,30 @@ fn run_consumer(
         4000.0, // vocal_max_hz
     );
 
+    #[allow(clippy::too_many_arguments)]
     fn handle_frame(
         samples: &[f32],
         recording: bool,
         vad_policy: VadPolicy,
         vad: &Option<VadConfig>,
+        noise_suppressor: &mut Option<NoiseSuppressor>,
         audio_cb: &Option<AudioFrameCallback>,
         out_buf: &mut Vec<f32>,
     ) {
         if !recording {
             return;
         }
+
+        // Denoise ahead of VAD/emit regardless of vad_policy — cleaner audio
+        // helps transcription whether or not VAD is gating it.
+        let denoised;
+        let samples = match noise_suppressor {
+            Some(ns) => {
+                denoised = ns.process_frame(samples);
+                &denoised[..]
+            }
+            None => samples,
+        };
 
         let mut emit = |buf: &[f32]| {
             out_buf.extend_from_slice(buf);
@@ -606,7 +624,7 @@ fn run_consumer(
         let mut pending = Some(chunk);
         while let Ok(cmd) = cmd_rx.try_recv() {
             match cmd {
-                Cmd::Start(policy, sent_at) => {
+                Cmd::Start(policy, noise_suppression_enabled, sent_at) => {
                     log::debug!(
                         "Cmd::Start processed {:?} after send; capture begins with the in-flight chunk",
                         sent_at.elapsed()
@@ -617,6 +635,19 @@ fn run_consumer(
                     processed_samples.clear();
                     recording = true;
                     visualizer.reset();
+                    noise_suppressor = if noise_suppression_enabled {
+                        match NoiseSuppressor::new() {
+                            Ok(ns) => Some(ns),
+                            Err(e) => {
+                                log::warn!(
+                                    "Failed to initialize noise suppressor, continuing without it: {e}"
+                                );
+                                None
+                            }
+                        }
+                    } else {
+                        None
+                    };
                     // Reconfigure the single VAD engine for this session's policy
                     // and clear its smoothing + recurrent state before it sees
                     // any frames.
@@ -641,6 +672,7 @@ fn run_consumer(
                                 true,
                                 vad_policy,
                                 &vad,
+                                &mut noise_suppressor,
                                 &audio_cb,
                                 &mut processed_samples,
                             )
@@ -660,6 +692,7 @@ fn run_consumer(
                                         true,
                                         vad_policy,
                                         &vad,
+                                        &mut noise_suppressor,
                                         &audio_cb,
                                         &mut processed_samples,
                                     )
@@ -679,6 +712,7 @@ fn run_consumer(
                             true,
                             vad_policy,
                             &vad,
+                            &mut noise_suppressor,
                             &audio_cb,
                             &mut processed_samples,
                         )
@@ -727,6 +761,7 @@ fn run_consumer(
                 recording,
                 vad_policy,
                 &vad,
+                &mut noise_suppressor,
                 &audio_cb,
                 &mut processed_samples,
             )

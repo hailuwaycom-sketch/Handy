@@ -482,6 +482,7 @@ impl AudioRecordingManager {
         &self,
         binding_id: &str,
         vad_policy: VadPolicy,
+        noise_suppression_enabled: bool,
     ) -> Result<(), String> {
         let mut state = self.state.lock().unwrap();
 
@@ -498,7 +499,7 @@ impl AudioRecordingManager {
             }
 
             if let Some(rec) = self.recorder.lock().unwrap().as_ref() {
-                if rec.start(vad_policy).is_ok() {
+                if rec.start(vad_policy, noise_suppression_enabled).is_ok() {
                     *self.is_recording.lock().unwrap() = true;
                     *state = RecordingState::Recording {
                         binding_id: binding_id.to_string(),

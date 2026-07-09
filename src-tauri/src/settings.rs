@@ -438,6 +438,10 @@ pub struct AppSettings {
     /// `overlay_position` (position `none` → style `None`).
     #[serde(default = "default_overlay_style")]
     pub overlay_style: OverlayStyle,
+    /// Denoises the microphone signal with RNNoise before VAD/transcription.
+    /// Off by default: it costs extra CPU per frame and most setups don't need it.
+    #[serde(default = "default_noise_suppression_enabled")]
+    pub noise_suppression_enabled: bool,
 }
 
 fn default_model() -> String {
@@ -503,6 +507,10 @@ fn default_overlay_style() -> OverlayStyle {
 
 fn default_vad_enabled() -> bool {
     true
+}
+
+fn default_noise_suppression_enabled() -> bool {
+    false
 }
 
 fn default_debug_mode() -> bool {
@@ -856,6 +864,7 @@ pub fn get_default_settings() -> AppSettings {
         extra_recording_buffer_ms: 0,
         vad_enabled: default_vad_enabled(),
         overlay_style: default_overlay_style(),
+        noise_suppression_enabled: default_noise_suppression_enabled(),
     }
 }
 

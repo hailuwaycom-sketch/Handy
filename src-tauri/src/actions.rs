@@ -485,6 +485,7 @@ impl ShortcutAction for TranscribeAction {
         } else {
             VadPolicy::Offline
         };
+        let noise_suppression_enabled = settings.noise_suppression_enabled;
         if model_supports_streaming {
             tm.start_stream();
         }
@@ -523,7 +524,9 @@ impl ShortcutAction for TranscribeAction {
                 rm_clone.apply_mute();
             });
 
-            if let Err(e) = rm.try_start_recording(&binding_id, vad_policy) {
+            if let Err(e) =
+                rm.try_start_recording(&binding_id, vad_policy, noise_suppression_enabled)
+            {
                 debug!("Recording failed: {}", e);
                 recording_error = Some(e);
             }
@@ -532,7 +535,7 @@ impl ShortcutAction for TranscribeAction {
             // This allows the microphone to be activated before playing the sound
             debug!("On-demand mode: Starting recording first, then audio feedback");
             let recording_start_time = Instant::now();
-            match rm.try_start_recording(&binding_id, vad_policy) {
+            match rm.try_start_recording(&binding_id, vad_policy, noise_suppression_enabled) {
                 Ok(()) => {
                     debug!("Recording started in {:?}", recording_start_time.elapsed());
                     // Small delay to ensure microphone stream is active
