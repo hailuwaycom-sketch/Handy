@@ -1,6 +1,7 @@
 use log::{debug, warn};
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::Value;
 use specta::Type;
 use std::collections::HashMap;
 use std::fmt;
@@ -891,6 +892,122 @@ impl AppSettings {
     }
 }
 
+/// A single step into a JSON value: either an object key or an array index,
+/// parsed from the dotted/bracketed path string `serde_path_to_error` reports
+/// (e.g. `bindings.transcribe.default_binding` or `custom_words[2]`).
+enum JsonPathSegment {
+    Key(String),
+    Index(usize),
+}
+
+fn parse_json_path(path: &str) -> Vec<JsonPathSegment> {
+    let mut segments = Vec::new();
+    let mut current = String::new();
+    let mut chars = path.chars().peekable();
+
+    while let Some(c) = chars.next() {
+        match c {
+            '.' => {
+                if !current.is_empty() {
+                    segments.push(JsonPathSegment::Key(std::mem::take(&mut current)));
+                }
+            }
+            '[' => {
+                if !current.is_empty() {
+                    segments.push(JsonPathSegment::Key(std::mem::take(&mut current)));
+                }
+                let mut index_str = String::new();
+                for c2 in chars.by_ref() {
+                    if c2 == ']' {
+                        break;
+                    }
+                    index_str.push(c2);
+                }
+                if let Ok(index) = index_str.parse::<usize>() {
+                    segments.push(JsonPathSegment::Index(index));
+                }
+            }
+            _ => current.push(c),
+        }
+    }
+    if !current.is_empty() {
+        segments.push(JsonPathSegment::Key(current));
+    }
+
+    segments
+}
+
+/// Removes the value at `path` inside `root`, so a subsequent deserialize
+/// sees that field as absent and falls back to its own `#[serde(default =
+/// ...)]`. Returns `false` if `path` doesn't resolve to a real location
+/// (empty path, or a segment that doesn't exist) — the caller should treat
+/// that as "can't repair this one" rather than retry forever.
+fn remove_json_path(root: &mut Value, path: &str) -> bool {
+    let segments = parse_json_path(path);
+    let Some((last, parents)) = segments.split_last() else {
+        return false;
+    };
+
+    let mut current = root;
+    for segment in parents {
+        current = match (segment, current) {
+            (JsonPathSegment::Key(key), Value::Object(map)) => match map.get_mut(key) {
+                Some(next) => next,
+                None => return false,
+            },
+            (JsonPathSegment::Index(index), Value::Array(arr)) => match arr.get_mut(*index) {
+                Some(next) => next,
+                None => return false,
+            },
+            _ => return false,
+        };
+    }
+
+    match (last, current) {
+        (JsonPathSegment::Key(key), Value::Object(map)) => map.remove(key).is_some(),
+        (JsonPathSegment::Index(index), Value::Array(arr)) if *index < arr.len() => {
+            arr[*index] = Value::Null;
+            true
+        }
+        _ => false,
+    }
+}
+
+/// Recovers `AppSettings` from a stored value that failed to deserialize
+/// as-is, by dropping only the specific field(s) that don't parse instead of
+/// discarding the whole settings file. A single corrupted field (wrong type,
+/// bad enum variant, etc.) used to wipe every setting — custom words, API
+/// keys, everything — back to factory defaults.
+///
+/// Each `AppSettings` field already carries `#[serde(default = "...")]`, so
+/// dropping just the offending key is enough for it to come back as its
+/// default on retry. Bounded by `MAX_REPAIR_ATTEMPTS` so a value that isn't
+/// even a JSON object (or some other pathological case) can't loop forever —
+/// it falls back to full defaults same as before.
+fn repair_settings_value(value: &Value) -> AppSettings {
+    const MAX_REPAIR_ATTEMPTS: u32 = 20;
+
+    let mut candidate = value.clone();
+    for _ in 0..MAX_REPAIR_ATTEMPTS {
+        match serde_path_to_error::deserialize::<_, AppSettings>(&candidate) {
+            Ok(settings) => return settings,
+            Err(e) => {
+                let path = e.path().to_string();
+                if !remove_json_path(&mut candidate, &path) {
+                    break;
+                }
+                warn!("Settings repair: dropped corrupted field '{}', retrying", path);
+            }
+        }
+    }
+
+    warn!(
+        "Settings repair exhausted after {} attempt(s), falling back to full defaults",
+        MAX_REPAIR_ATTEMPTS
+    );
+    get_default_settings()
+}
+
 pub fn load_or_create_app_settings(app: &AppHandle) -> AppSettings {
     // Initialize store
     let store = app
@@ -924,11 +1041,11 @@ pub fn load_or_create_app_settings(app: &AppHandle) -> AppSettings {
                 settings
             }
             Err(e) => {
-                warn!("Failed to parse settings: {}", e);
-                // Fall back to default settings if parsing fails
-                let default_settings = get_default_settings();
-                store.set("settings", serde_json::to_value(&default_settings).unwrap());
-                default_settings
+                warn!("Failed to parse settings, attempting repair: {}", e);
+                store.set("settings_corrupted_backup", settings_value.clone());
+                let repaired = repair_settings_value(&settings_value);
+                store.set("settings", serde_json::to_value(&repaired).unwrap());
+                repaired
             }
         }
     } else {
@@ -959,10 +1076,12 @@ pub fn get_settings(app: &AppHandle) -> AppSettings {
                 }
                 settings
             }
-            Err(_) => {
-                let default_settings = get_default_settings();
-                store.set("settings", serde_json::to_value(&default_settings).unwrap());
-                default_settings
+            Err(e) => {
+                warn!("Failed to parse settings, attempting repair: {}", e);
+                store.set("settings_corrupted_backup", settings_value.clone());
+                let repaired = repair_settings_value(&settings_value);
+                store.set("settings", serde_json::to_value(&repaired).unwrap());
+                repaired
             }
         }
     } else {
@@ -1211,5 +1330,70 @@ mod tests {
         let out = format!("{:?}", map);
         assert!(!out.contains("secret"));
         assert!(out.contains("[REDACTED]"));
+    }
+
+    #[test]
+    fn repair_drops_a_single_corrupted_field_and_keeps_everything_else() {
+        let mut raw = serde_json::to_value(get_default_settings()).unwrap();
+        raw["custom_words"] = serde_json::json!(["OpenAI", "ChargeBee"]);
+        // Wrong type: vad_enabled should be a bool, not a string.
+        raw["vad_enabled"] = serde_json::json!("yes");
+
+        let repaired = repair_settings_value(&raw);
+
+        // The corrupted field fell back to its own default...
+        assert!(repaired.vad_enabled);
+        // ...but a sibling field that was valid was NOT wiped along with it.
+        assert_eq!(repaired.custom_words, vec!["OpenAI", "ChargeBee"]);
+    }
+
+    #[test]
+    fn repair_drops_multiple_corrupted_fields_within_the_retry_budget() {
+        let mut raw = serde_json::to_value(get_default_settings()).unwrap();
+        raw["custom_words"] = serde_json::json!(["Keep", "Me"]);
+        raw["vad_enabled"] = serde_json::json!("yes");
+        raw["noise_suppression_enabled"] = serde_json::json!(42);
+        raw["history_limit"] = serde_json::json!("not a number");
+
+        let repaired = repair_settings_value(&raw);
+
+        assert!(repaired.vad_enabled);
+        assert!(!repaired.noise_suppression_enabled);
+        assert_eq!(repaired.custom_words, vec!["Keep", "Me"]);
+    }
+
+    #[test]
+    fn repair_falls_back_to_defaults_when_value_is_not_an_object() {
+        let raw = serde_json::json!("this is not a settings object");
+
+        let repaired = repair_settings_value(&raw);
+
+        assert_eq!(repaired.custom_words, get_default_settings().custom_words);
+    }
+
+    #[test]
+    fn remove_json_path_deletes_a_top_level_key() {
+        let mut value = serde_json::json!({"a": 1, "b": 2});
+        assert!(remove_json_path(&mut value, "a"));
+        assert_eq!(value, serde_json::json!({"b": 2}));
+    }
+
+    #[test]
+    fn remove_json_path_deletes_a_nested_key() {
+        let mut value = serde_json::json!({"bindings": {"transcribe": {"default_binding": "ctrl+space"}}});
+        assert!(remove_json_path(
+            &mut value,
+            "bindings.transcribe.default_binding"
+        ));
+        assert_eq!(
+            value,
+            serde_json::json!({"bindings": {"transcribe": {}}})
+        );
+    }
+
+    #[test]
+    fn remove_json_path_returns_false_for_a_path_that_does_not_exist() {
+        let mut value = serde_json::json!({"a": 1});
+        assert!(!remove_json_path(&mut value, "nonexistent.nested.path"));
     }
 }
