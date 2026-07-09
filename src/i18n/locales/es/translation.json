@@ -228,6 +228,10 @@
         "label": "Retroalimentación de Audio",
         "description": "Reproducir sonido cuando la grabación inicia y se detiene"
       },
+      "noiseCancellation": {
+        "label": "Cancelación de Ruido",
+        "description": "Limpia el ruido de fondo del micrófono antes de transcribir (usa más CPU por segundo grabado)"
+      },
       "outputDevice": {
         "title": "Dispositivo de Salida",
         "description": "Selecciona tu dispositivo de salida de audio preferido para los sonidos de retroalimentación",

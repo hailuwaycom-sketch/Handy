@@ -228,6 +228,10 @@
         "label": "Audio Feedback",
         "description": "Play sound when recording starts and stops"
       },
+      "noiseCancellation": {
+        "label": "Noise Cancellation",
+        "description": "Cleans background noise from the microphone before transcribing (uses more CPU per recorded second)"
+      },
       "outputDevice": {
         "title": "Output Device",
         "description": "Select your preferred audio output device for feedback sounds",
