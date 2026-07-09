@@ -297,16 +297,16 @@
   align-items: center;
   gap: 3px;
   padding-right: 8px;
-  height: 18px;
+  height: 26px;
   flex: none;
 }
 .swave i {
   width: 4px;
   min-height: 3px;
-  max-height: 18px;
+  max-height: 26px;
   border-radius: 2px;
   background: var(--s-accent);
-  transition: height 80ms linear;
+  transition: height 60ms linear;
 }
 .sx {
   width: 22px;

@@ -85,10 +85,11 @@ const RecordingOverlay: React.FC = () => {
       const unlistenLevel = await listen<number[]>("mic-level", (event) => {
         const newLevels = event.payload as number[];
         // Exponential smoothing across the 16 buckets, then take the first N
-        // bars for the shared waveform.
+        // bars for the shared waveform. Weighted toward the new sample so
+        // the bars react snappily instead of crawling toward loud syllables.
         const smoothed = smoothedLevelsRef.current.map((prev, i) => {
           const target = newLevels[i] || 0;
-          return prev * 0.7 + target * 0.3;
+          return prev * 0.45 + target * 0.55;
         });
         smoothedLevelsRef.current = smoothed;
         setLevels(smoothed.slice(0, WAVE_BARS));
@@ -156,7 +157,7 @@ const RecordingOverlay: React.FC = () => {
         <i
           key={i}
           style={{
-            height: `${Math.max(3, Math.min(18, 3 + Math.pow(v, 0.7) * 15))}px`,
+            height: `${Math.max(3, Math.min(26, 3 + Math.pow(v, 0.6) * 23))}px`,
           }}
         />
       ))}
