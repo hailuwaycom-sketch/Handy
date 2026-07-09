@@ -166,24 +166,19 @@ fn force_overlay_topmost(overlay_window: &tauri::webview::WebviewWindow) {
 fn get_monitor_with_cursor(app_handle: &AppHandle) -> Option<tauri::Monitor> {
     if let Some(mouse_location) = input::get_cursor_position(app_handle) {
         if let Ok(monitors) = app_handle.available_monitors() {
+            // Monitor position/size (physical pixels) and the cursor location
+            // from enigo (GetCursorPos on Windows, physical pixels for a
+            // DPI-aware process) already live in the same virtual-desktop
+            // coordinate space, so compare them directly. Dividing a
+            // monitor's *own* origin/size by its *own* scale_factor (as this
+            // used to do) only produces a valid bounding box when every
+            // monitor shares the same scale — with mixed DPI (e.g. 100%
+            // primary + 125%/150% secondary) it shrinks just that monitor's
+            // box out of alignment with its real physical bounds, causing
+            // cursor-on-secondary-monitor lookups to silently miss and fall
+            // through to the primary_monitor() fallback below.
             for monitor in monitors {
-                // Tauri's monitor position/size are physical pixels, but enigo
-                // may return logical coordinates (confirmed on macOS via
-                // NSEvent::mouseLocation; on Windows, GetCursorPos behavior
-                // depends on the process DPI-awareness context). Dividing by
-                // scale_factor normalizes to logical, which is safe regardless:
-                // if enigo returns logical it matches directly, and if it returns
-                // physical on a scale=1 monitor the division is a no-op.
-                let scale = monitor.scale_factor();
-                let pos = PhysicalPosition::new(
-                    (monitor.position().x as f64 / scale) as i32,
-                    (monitor.position().y as f64 / scale) as i32,
-                );
-                let size = PhysicalSize::new(
-                    (monitor.size().width as f64 / scale) as u32,
-                    (monitor.size().height as f64 / scale) as u32,
-                );
-                if is_mouse_within_monitor(mouse_location, &pos, &size) {
+                if is_mouse_within_monitor(mouse_location, monitor.position(), monitor.size()) {
                     return Some(monitor);
                 }
             }
@@ -214,37 +209,74 @@ fn is_mouse_within_monitor(
         && mouse_y < (monitor_y + monitor_height as i32)
 }
 
-/// Returns overlay position in logical coordinates (points on macOS).
+/// Returns the overlay's target position. On Windows this is **physical
+/// pixels** (paired with `tauri::Position::Physical` at the call sites); on
+/// other platforms it stays logical coordinates (points on macOS).
 ///
 /// Uses monitor position/size directly rather than work_area(), which can
 /// return incorrect coordinates on macOS for monitors with negative positions.
 /// The per-platform OVERLAY_TOP_OFFSET / OVERLAY_BOTTOM_OFFSET constants
 /// already account for system chrome (menu bar, taskbar).
 ///
-/// We must use LogicalPosition (not PhysicalPosition) because Tauri/tao
+/// Off Windows we use LogicalPosition (not PhysicalPosition) because Tauri/tao
 /// converts PhysicalPosition using the scale factor of the monitor the window
-/// is *currently* on, which is wrong when moving cross-monitor.
+/// is *currently* on, which is wrong when moving cross-monitor. On Windows we
+/// sidestep that ambiguity entirely by computing physical pixels directly
+/// from the target monitor's own (already-physical) bounds — see
+/// `get_monitor_with_cursor` for why mixing in a scale-factor division here
+/// broke mixed-DPI multi-monitor setups.
 fn calculate_overlay_position(
     app_handle: &AppHandle,
     width: f64,
     height: f64,
 ) -> Option<(f64, f64)> {
     let monitor = get_monitor_with_cursor(app_handle)?;
-    let scale = monitor.scale_factor();
-    let monitor_x = monitor.position().x as f64 / scale;
-    let monitor_y = monitor.position().y as f64 / scale;
-    let monitor_width = monitor.size().width as f64 / scale;
-    let monitor_height = monitor.size().height as f64 / scale;
-
     let settings = settings::get_settings(app_handle);
 
-    let x = monitor_x + (monitor_width - width) / 2.0;
-    let y = match settings.overlay_position {
-        OverlayPosition::Top => monitor_y + OVERLAY_TOP_OFFSET,
-        OverlayPosition::Bottom => monitor_y + monitor_height - height - OVERLAY_BOTTOM_OFFSET,
-    };
+    #[cfg(target_os = "windows")]
+    {
+        let scale = monitor.scale_factor();
+        let monitor_x = monitor.position().x as f64;
+        let monitor_y = monitor.position().y as f64;
+        let monitor_width = monitor.size().width as f64;
+        let monitor_height = monitor.size().height as f64;
+        // width/height arrive in logical points; convert to physical pixels
+        // using the *target* monitor's scale before centering/offsetting.
+        let width_px = width * scale;
+        let height_px = height * scale;
 
-    Some((x, y))
+        let x = monitor_x + (monitor_width - width_px) / 2.0;
+        let y = match settings.overlay_position {
+            OverlayPosition::Top => monitor_y + OVERLAY_TOP_OFFSET * scale,
+            OverlayPosition::Bottom => {
+                monitor_y + monitor_height - height_px - OVERLAY_BOTTOM_OFFSET * scale
+            }
+        };
+
+        debug!(
+            "overlay position (physical): monitor_pos=({}, {}) monitor_size=({}, {}) scale={} -> ({}, {})",
+            monitor_x, monitor_y, monitor_width, monitor_height, scale, x, y
+        );
+
+        return Some((x, y));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let scale = monitor.scale_factor();
+        let monitor_x = monitor.position().x as f64 / scale;
+        let monitor_y = monitor.position().y as f64 / scale;
+        let monitor_width = monitor.size().width as f64 / scale;
+        let monitor_height = monitor.size().height as f64 / scale;
+
+        let x = monitor_x + (monitor_width - width) / 2.0;
+        let y = match settings.overlay_position {
+            OverlayPosition::Top => monitor_y + OVERLAY_TOP_OFFSET,
+            OverlayPosition::Bottom => monitor_y + monitor_height - height - OVERLAY_BOTTOM_OFFSET,
+        };
+
+        Some((x, y))
+    }
 }
 
 /// Current overlay window size in logical units (points), for repositioning
@@ -377,6 +409,12 @@ fn show_overlay_state(app_handle: &AppHandle, state: &str) {
         let mut set_pos_elapsed = std::time::Duration::ZERO;
         if let Some((x, y)) = calculate_overlay_position(app_handle, width, height) {
             let set_pos_started = std::time::Instant::now();
+            #[cfg(target_os = "windows")]
+            let _ = overlay_window.set_position(tauri::Position::Physical(PhysicalPosition {
+                x: x as i32,
+                y: y as i32,
+            }));
+            #[cfg(not(target_os = "windows"))]
             let _ = overlay_window
                 .set_position(tauri::Position::Logical(tauri::LogicalPosition { x, y }));
             set_pos_elapsed = set_pos_started.elapsed();
@@ -436,6 +474,12 @@ pub fn update_overlay_position(app_handle: &AppHandle) {
         let (width, height) = current_overlay_logical_size(&overlay_window)
             .unwrap_or((OVERLAY_WIDTH, OVERLAY_HEIGHT));
         if let Some((x, y)) = calculate_overlay_position(app_handle, width, height) {
+            #[cfg(target_os = "windows")]
+            let _ = overlay_window.set_position(tauri::Position::Physical(PhysicalPosition {
+                x: x as i32,
+                y: y as i32,
+            }));
+            #[cfg(not(target_os = "windows"))]
             let _ = overlay_window
                 .set_position(tauri::Position::Logical(tauri::LogicalPosition { x, y }));
         }
