@@ -46,10 +46,12 @@ export const AboutSettings: React.FC = () => {
           grouped={true}
         >
           <div className="flex flex-col items-end gap-0.5">
-            {/* eslint-disable-next-line i18next/no-literal-string */}
-            <span className="text-sm font-mono">Handy v{version}</span>
-            <span className="text-xs font-mono text-mid-gray">
+            <span className="text-sm font-mono">
               {t("settings.about.version.imperioVersion")}
+            </span>
+            {/* eslint-disable-next-line i18next/no-literal-string */}
+            <span className="text-xs font-mono text-mid-gray">
+              Handy v{version}
             </span>
           </div>
         </SettingContainer>
