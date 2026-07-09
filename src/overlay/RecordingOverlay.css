@@ -245,10 +245,10 @@
   height: var(--ov-base-h);
   padding: 0 10px;
   display: grid;
-  /* Equal side columns (min 22px to hold the cancel button) keep the center item
-     — waveform or label — centered whether the pill is at min width or content-
-     sized. */
-  grid-template-columns: minmax(22px, 1fr) auto minmax(22px, 1fr);
+  /* Equal-ish side columns (right one wider to hold the now-26px cancel button)
+     keep the center item — waveform or label — centered whether the pill is at
+     min width or content-sized. */
+  grid-template-columns: minmax(26px, 1fr) auto minmax(30px, 1fr);
   align-items: center;
 }
 .sbase-l {
@@ -309,8 +309,8 @@
   transition: height 60ms linear;
 }
 .sx {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   flex: none;
   padding: 0;
@@ -320,8 +320,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--s-muted);
-  background: var(--s-hair);
+  color: color-mix(in srgb, var(--s-muted) 60%, var(--color-text) 40%);
+  background: var(--s-border);
   cursor: pointer;
   transition:
     background-color 150ms ease,
@@ -329,8 +329,8 @@
     transform 100ms ease;
 }
 .sx svg {
-  width: 9px;
-  height: 9px;
+  width: 13px;
+  height: 13px;
   display: block;
 }
 .sx:hover {

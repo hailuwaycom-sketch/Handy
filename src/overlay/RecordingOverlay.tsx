@@ -174,7 +174,7 @@ const RecordingOverlay: React.FC = () => {
         <path
           d="M4 4 L12 12 M12 4 L4 12"
           stroke="currentColor"
-          strokeWidth="1.6"
+          strokeWidth="1.8"
           strokeLinecap="round"
         />
       </svg>
