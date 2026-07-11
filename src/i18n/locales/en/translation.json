@@ -236,6 +236,10 @@
         "label": "Noise Cancellation",
         "description": "Cleans background noise from the microphone before transcribing (uses more CPU per recorded second)"
       },
+      "pauseMediaWhileRecording": {
+        "label": "Pause Media While Dictating",
+        "description": "Pauses any music or video that's playing while you dictate and resumes it when you're done (Windows only)"
+      },
       "outputDevice": {
         "title": "Output Device",
         "description": "Select your preferred audio output device for feedback sounds",

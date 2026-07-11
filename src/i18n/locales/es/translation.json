@@ -236,6 +236,10 @@
         "label": "Cancelación de Ruido",
         "description": "Limpia el ruido de fondo del micrófono antes de transcribir (usa más CPU por segundo grabado)"
       },
+      "pauseMediaWhileRecording": {
+        "label": "Pausar Media al Dictar",
+        "description": "Pausa la música o el video que esté sonando mientras dictas y lo reanuda al terminar (solo Windows)"
+      },
       "outputDevice": {
         "title": "Dispositivo de Salida",
         "description": "Selecciona tu dispositivo de salida de audio preferido para los sonidos de retroalimentación",

@@ -29,6 +29,11 @@ pub fn cancel_current_operation(app: &AppHandle) {
     let tm = app.state::<Arc<TranscriptionManager>>();
     tm.cancel_stream();
 
+    // Resume any media we paused for this dictation — cancel doesn't go through
+    // the normal stop path, so it has to bring media back itself. No-op when
+    // nothing was paused.
+    std::thread::spawn(crate::media_control::resume_paused_media);
+
     // Update tray icon and hide overlay
     change_tray_icon(app, crate::tray::TrayIconState::Idle);
     hide_recording_overlay(app);

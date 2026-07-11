@@ -154,6 +154,8 @@ const settingUpdaters: {
   vad_enabled: (value) => commands.changeVadEnabledSetting(value as boolean),
   noise_suppression_enabled: (value) =>
     commands.changeNoiseSuppressionEnabledSetting(value as boolean),
+  pause_media_while_recording: (value) =>
+    commands.changePauseMediaWhileRecordingSetting(value as boolean),
   show_tray_icon: (value) =>
     commands.changeShowTrayIconSetting(value as boolean),
   transcribe_accelerator: (value) =>

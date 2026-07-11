@@ -587,6 +587,21 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  async changePauseMediaWhileRecordingSetting(
+    enabled: boolean,
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("change_pause_media_while_recording_setting", {
+          enabled,
+        }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
   async changeAppLanguageSetting(
     language: string,
   ): Promise<Result<null, string>> {
@@ -1354,6 +1369,13 @@ export type AppSettings = {
    * post-processing pipeline.
    */
   text_replacement_rules?: TextReplacementRule[];
+  /**
+   * Pause whatever media is playing (Spotify, browser video, etc.) while a
+   * dictation is in progress, then resume exactly the sessions we paused when
+   * it ends. Off by default so it never surprises the user. Windows-only for
+   * now; a no-op on other platforms.
+   */
+  pause_media_while_recording?: boolean;
 };
 export type AudioDevice = { index: string; name: string; is_default: boolean };
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter";

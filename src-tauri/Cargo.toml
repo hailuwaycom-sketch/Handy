@@ -111,6 +111,11 @@ windows = { version = "0.61.3", features = [
   "Win32_System_Variant",
   "Win32_Foundation",
   "Win32_UI_WindowsAndMessaging",
+  # Pause/resume system media around a dictation (see media_control.rs).
+  "Win32_System_Com",
+  "Foundation",
+  "Foundation_Collections",
+  "Media_Control",
 ] }
 winreg = "0.55"
 
