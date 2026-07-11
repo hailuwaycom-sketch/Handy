@@ -151,6 +151,18 @@ function App() {
     };
   }, [t]);
 
+  // Listen for AI Replace Selection aborting because nothing was selected
+  // when the hotkey was pressed (actions.rs emits this before recording
+  // even starts, so there's no other feedback for the user otherwise).
+  useEffect(() => {
+    const unlisten = listen("ai-replace-selection-error", () => {
+      toast.error(t("errors.aiReplaceSelectionNoSelection"));
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [t]);
+
   // Listen for model loading failures and show a toast
   useEffect(() => {
     const unlisten = listen<ModelStateEvent>("model-state-changed", (event) => {
