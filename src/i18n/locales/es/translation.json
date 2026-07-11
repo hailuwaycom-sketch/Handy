@@ -368,6 +368,17 @@
         "remove": "Eliminar {{word}}",
         "duplicate": "\"{{word}}\" ya existe"
       },
+      "textReplacement": {
+        "title": "Reemplazo de Texto",
+        "description": "Reglas de buscar y reemplazar aplicadas al final de la transcripción, después de las Palabras Personalizadas. Admite expresiones regulares con grupos de captura ($1, $2).",
+        "findPlaceholder": "Buscar",
+        "replacePlaceholder": "Reemplazar con",
+        "add": "Agregar",
+        "useRegex": "Regex",
+        "caseSensitive": "Sensible a mayúsculas",
+        "invalidRegex": "Expresión regular inválida",
+        "remove": "Eliminar regla \"{{find}}\""
+      },
       "voiceActivityDetection": {
         "title": "Voice Activity Detection",
         "description": "Filter silence from recordings. Streaming-capable models use a longer VAD tail; disabling VAD records raw audio."
