@@ -1,7 +1,6 @@
 use log::{debug, warn};
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
-use serde_json::Value;
 use specta::Type;
 use std::collections::HashMap;
 use std::fmt;
