@@ -648,6 +648,7 @@ fn run_consumer(
                     } else {
                         None
                     };
+                    frame_resampler.reset();
                     // Reconfigure the single VAD engine for this session's policy
                     // and clear its smoothing + recurrent state before it sees
                     // any frames.

@@ -18,11 +18,14 @@ use ferrous_opencc::{config::BuiltinConfig, OpenCC};
 use log::{debug, error, warn};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::Manager;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_clipboard_manager::ClipboardExt;
+
+const CANCELLATION_POLL_INTERVAL: Duration = Duration::from_millis(25);
 
 #[derive(Clone, serde::Serialize)]
 struct RecordingErrorEvent {
@@ -87,6 +90,26 @@ fn build_system_prompt(prompt_template: &str) -> String {
 /// transcription".
 fn is_blank_transcription(transcription: &str) -> bool {
     transcription.trim().is_empty()
+}
+
+async fn complete_unless_cancelled<F, C>(operation: F, is_cancelled: C) -> Option<F::Output>
+where
+    F: Future,
+    C: Fn() -> bool,
+{
+    tokio::pin!(operation);
+
+    loop {
+        if is_cancelled() {
+            return None;
+        }
+
+        if let Ok(result) =
+            tokio::time::timeout(CANCELLATION_POLL_INTERVAL, operation.as_mut()).await
+        {
+            return Some(result);
+        }
+    }
 }
 
 fn should_use_streaming_overlay(style: OverlayStyle, is_streaming: bool) -> bool {
@@ -892,6 +915,9 @@ impl ShortcutAction for TranscribeAction {
                             }
 
                             let processed = if is_replace_selection {
+                                // VozImperio: AI Replace Selection — la "transcripcion"
+                                // es una instruccion hablada; transformamos la seleccion
+                                // con el LLM en vez del pipeline normal de post-proceso.
                                 let selection = captured_selection.unwrap_or_default();
                                 let transform_settings = get_settings(&ah);
                                 let final_text = match transform_selection_with_llm(
@@ -915,8 +941,20 @@ impl ShortcutAction for TranscribeAction {
                                     post_process_prompt: None,
                                 }
                             } else {
-                                process_transcription_output(&ah, &transcription, post_process)
-                                    .await
+                                // upstream v0.9.1: cancelar el post-proceso si el usuario
+                                // aborta mientras corre (fix #1614).
+                                let Some(processed) = complete_unless_cancelled(
+                                    process_transcription_output(&ah, &transcription, post_process),
+                                    || rm.was_cancelled_since(cancel_generation),
+                                )
+                                .await
+                                else {
+                                    debug!("Transcription operation cancelled during output handling");
+                                    utils::hide_recording_overlay(&ah);
+                                    change_tray_icon(&ah, TrayIconState::Idle);
+                                    return;
+                                };
+                                processed
                             };
 
                             if rm.was_cancelled_since(cancel_generation) {
@@ -1100,8 +1138,13 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
 
 #[cfg(test)]
 mod tests {
-    use super::{is_blank_transcription, should_use_streaming_overlay};
+    use super::{complete_unless_cancelled, is_blank_transcription, should_use_streaming_overlay};
     use crate::settings::OverlayStyle;
+    use std::future;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+    use std::thread;
+    use std::time::Duration;
 
     #[test]
     fn blank_transcription_is_detected() {
@@ -1114,6 +1157,34 @@ mod tests {
     fn non_blank_transcription_is_kept() {
         assert!(!is_blank_transcription("hello"));
         assert!(!is_blank_transcription("  hello  "));
+    }
+
+    #[test]
+    fn completed_operation_returns_its_output() {
+        let result = tauri::async_runtime::block_on(complete_unless_cancelled(
+            future::ready("done"),
+            || false,
+        ));
+
+        assert_eq!(result, Some("done"));
+    }
+
+    #[test]
+    fn pending_operation_stops_after_cancellation() {
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let cancelled_for_thread = Arc::clone(&cancelled);
+        let cancel_thread = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(10));
+            cancelled_for_thread.store(true, Ordering::Release);
+        });
+
+        let result = tauri::async_runtime::block_on(complete_unless_cancelled(
+            future::pending::<()>(),
+            || cancelled.load(Ordering::Acquire),
+        ));
+
+        cancel_thread.join().unwrap();
+        assert_eq!(result, None);
     }
 
     #[test]

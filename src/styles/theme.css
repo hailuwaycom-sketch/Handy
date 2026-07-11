@@ -1,21 +1,38 @@
 /* VozImperio Colors */
 
 :root {
-  --color-text: #0a0d0c;
-  --color-background: #f2f6f4;
+  /* VozImperio: marca dark imperial forzada. El selector de tema (light/dark/
+     system) se mantiene como mecanismo de upstream pero AMBOS pares apuntan a
+     la misma paleta imperial oscura, de modo que la identidad no se diluye sin
+     importar el modo elegido o el tema del SO. Paleta: guia-de-marca-imperio. */
+  --light-color-text: #f2f6f4;
+  --light-color-background: #0a0d0c;
+  --light-color-logo-primary: #f0b848;
+  --light-color-logo-stroke: #183820;
+
+  --dark-color-text: #f2f6f4;
+  --dark-color-background: #0a0d0c;
+  --dark-color-logo-primary: #f0b848;
+  --dark-color-logo-stroke: #183820;
+
+  /* Tokens that do not change between light and dark */
   --color-background-ui: #f0b848;
-  --color-logo-primary: #f0b848;
-  --color-logo-stroke: #183820;
-  --color-text-stroke: #966423;
+  --color-text-stroke: #fff7c6;
   --color-mid-gray: #808080;
+
+  /* Active palette — defaults to light, follows the OS via the media query
+     below, or is forced by `data-theme` (see App.css). */
+  --color-text: var(--light-color-text);
+  --color-background: var(--light-color-background);
+  --color-logo-primary: var(--light-color-logo-primary);
+  --color-logo-stroke: var(--light-color-logo-stroke);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-text: #f2f6f4;
-    --color-background: #0a0d0c;
-    --color-logo-primary: #f0b848;
-    --color-logo-stroke: #183820;
-    --color-text-stroke: #fff7c6;
+    --color-text: var(--dark-color-text);
+    --color-background: var(--dark-color-background);
+    --color-logo-primary: var(--dark-color-logo-primary);
+    --color-logo-stroke: var(--dark-color-logo-stroke);
   }
 }

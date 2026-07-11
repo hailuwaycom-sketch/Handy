@@ -40,6 +40,8 @@ export const AboutSettings: React.FC = () => {
     <div className="max-w-3xl w-full mx-auto space-y-6">
       <SettingsGroup title={t("settings.about.title")}>
         <AppLanguageSelector descriptionMode="tooltip" grouped={true} />
+        {/* VozImperio: selector de tema oculto — marca dark imperial forzada.
+            El mecanismo de theme (theme.ts/main.tsx/ThemeSelector) se conserva. */}
         <SettingContainer
           title={t("settings.about.version.title")}
           description={t("settings.about.version.description")}
