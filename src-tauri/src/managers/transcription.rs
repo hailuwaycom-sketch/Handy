@@ -1,4 +1,4 @@
-use crate::audio_toolkit::{apply_custom_words, filter_transcription_output};
+use crate::audio_toolkit::{apply_custom_words, apply_text_replacements, filter_transcription_output};
 use crate::managers::audio::AudioRecordingManager;
 use crate::managers::model::{EngineType, ModelManager};
 use crate::settings::{
@@ -1608,11 +1608,17 @@ fn post_process_transcription_text(
         raw
     };
 
-    filter_transcription_output(
+    let filtered = filter_transcription_output(
         &corrected,
         &settings.app_language,
         &settings.custom_filler_words,
-    )
+    );
+
+    if settings.text_replacement_rules.is_empty() {
+        filtered
+    } else {
+        apply_text_replacements(&filtered, &settings.text_replacement_rules)
+    }
 }
 
 /// Decide a transcribe-cpp run's task + translation target from settings.

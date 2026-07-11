@@ -1,6 +1,7 @@
+use crate::settings::TextReplacementRule;
 use natural::phonetics::soundex;
 use once_cell::sync::Lazy;
-use regex::Regex;
+use regex::{NoExpand, Regex, RegexBuilder};
 use strsim::levenshtein;
 
 /// Builds an n-gram string by cleaning and concatenating words
@@ -350,6 +351,54 @@ pub fn filter_transcription_output(
     filtered.trim().to_string()
 }
 
+/// Applies user-defined find/replace rules to text, in order.
+///
+/// Each rule is either a literal substring match or a regex, both run
+/// through the same engine: a literal `find` is escaped first so characters
+/// like `.` or `(` aren't treated as regex metacharacters. Case sensitivity
+/// is controlled per rule. Only regex rules expand `$1`-style capture groups
+/// in the replacement — a literal rule's `replace` text is inserted exactly
+/// as typed, so a user who literally wants `$1` in their output gets it.
+/// An invalid regex pattern is skipped (logged, that one rule no-ops)
+/// instead of panicking or breaking the rest of the pipeline.
+pub fn apply_text_replacements(text: &str, rules: &[TextReplacementRule]) -> String {
+    let mut result = text.to_string();
+
+    for rule in rules {
+        if rule.find.is_empty() {
+            continue;
+        }
+
+        let pattern = if rule.use_regex {
+            rule.find.clone()
+        } else {
+            regex::escape(&rule.find)
+        };
+
+        match RegexBuilder::new(&pattern)
+            .case_insensitive(!rule.case_sensitive)
+            .build()
+        {
+            Ok(re) => {
+                result = if rule.use_regex {
+                    re.replace_all(&result, rule.replace.as_str()).to_string()
+                } else {
+                    re.replace_all(&result, NoExpand(&rule.replace)).to_string()
+                };
+            }
+            Err(e) => {
+                log::warn!(
+                    "Skipping invalid text-replacement pattern '{}': {}",
+                    rule.find,
+                    e
+                );
+            }
+        }
+    }
+
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -618,5 +667,86 @@ mod tests {
         let custom_words = vec!["R&D".to_string()];
         let result = apply_custom_words(text, &custom_words, 0.18);
         assert_eq!(result, "send it to R&D for review");
+    }
+
+    fn rule(find: &str, replace: &str, use_regex: bool, case_sensitive: bool) -> TextReplacementRule {
+        TextReplacementRule {
+            id: "test".to_string(),
+            find: find.to_string(),
+            replace: replace.to_string(),
+            use_regex,
+            case_sensitive,
+        }
+    }
+
+    #[test]
+    fn test_text_replacement_literal() {
+        let rules = vec![rule("teh", "the", false, true)];
+        assert_eq!(apply_text_replacements("teh cat", &rules), "the cat");
+    }
+
+    #[test]
+    fn test_text_replacement_literal_case_insensitive() {
+        let rules = vec![rule("teh", "the", false, false)];
+        assert_eq!(apply_text_replacements("Teh cat", &rules), "the cat");
+    }
+
+    #[test]
+    fn test_text_replacement_literal_case_sensitive_does_not_match_wrong_case() {
+        let rules = vec![rule("Teh", "the", false, true)];
+        assert_eq!(apply_text_replacements("teh cat", &rules), "teh cat");
+    }
+
+    #[test]
+    fn test_text_replacement_literal_escapes_regex_metacharacters() {
+        // "." should match a literal dot, not "any character"
+        let rules = vec![rule("a.b", "X", false, true)];
+        assert_eq!(apply_text_replacements("a.b and axb", &rules), "X and axb");
+    }
+
+    #[test]
+    fn test_text_replacement_literal_ignores_capture_group_syntax_in_replacement() {
+        // Literal mode: "$1" in the replacement is inserted verbatim, not expanded.
+        let rules = vec![rule("price", "$1", false, true)];
+        assert_eq!(apply_text_replacements("the price is high", &rules), "the $1 is high");
+    }
+
+    #[test]
+    fn test_text_replacement_regex_capture_group() {
+        let rules = vec![rule(r"(\d+)km", "$1 kilometers", true, true)];
+        assert_eq!(
+            apply_text_replacements("ran 5km today", &rules),
+            "ran 5 kilometers today"
+        );
+    }
+
+    #[test]
+    fn test_text_replacement_regex_case_insensitive() {
+        let rules = vec![rule(r"hello", "hi", true, false)];
+        assert_eq!(apply_text_replacements("HELLO there", &rules), "hi there");
+    }
+
+    #[test]
+    fn test_text_replacement_invalid_regex_is_skipped_not_panicking() {
+        let rules = vec![rule("(unclosed", "x", true, true)];
+        assert_eq!(apply_text_replacements("(unclosed", &rules), "(unclosed");
+    }
+
+    #[test]
+    fn test_text_replacement_empty_rules_is_noop() {
+        assert_eq!(apply_text_replacements("hello world", &[]), "hello world");
+    }
+
+    #[test]
+    fn test_text_replacement_applies_rules_in_order() {
+        let rules = vec![rule("a", "b", false, true), rule("b", "c", false, true)];
+        // "a" -> "b" first, then that "b" (plus the original "b") both -> "c"
+        assert_eq!(apply_text_replacements("a b", &rules), "c c");
+    }
+
+    #[test]
+    fn test_text_replacement_skips_empty_find() {
+        let rules = vec![rule("", "x", false, true)];
+        assert_eq!(apply_text_replacements("hello", &rules), "hello");
     }
 }

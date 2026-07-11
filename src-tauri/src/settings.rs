@@ -95,6 +95,17 @@ pub struct LLMPrompt {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Type)]
+pub struct TextReplacementRule {
+    pub id: String,
+    pub find: String,
+    pub replace: String,
+    #[serde(default)]
+    pub use_regex: bool,
+    #[serde(default)]
+    pub case_sensitive: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Type)]
 pub struct PostProcessProvider {
     pub id: String,
     pub label: String,
@@ -443,6 +454,11 @@ pub struct AppSettings {
     /// Off by default: it costs extra CPU per frame and most setups don't need it.
     #[serde(default = "default_noise_suppression_enabled")]
     pub noise_suppression_enabled: bool,
+    /// Deterministic find/replace rules applied after custom-words correction
+    /// and filler-word filtering — the last step of the synchronous
+    /// post-processing pipeline.
+    #[serde(default)]
+    pub text_replacement_rules: Vec<TextReplacementRule>,
 }
 
 fn default_model() -> String {
@@ -866,6 +882,7 @@ pub fn get_default_settings() -> AppSettings {
         vad_enabled: default_vad_enabled(),
         overlay_style: default_overlay_style(),
         noise_suppression_enabled: default_noise_suppression_enabled(),
+        text_replacement_rules: Vec::new(),
     }
 }
 
