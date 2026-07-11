@@ -459,6 +459,12 @@ pub struct AppSettings {
     /// post-processing pipeline.
     #[serde(default)]
     pub text_replacement_rules: Vec<TextReplacementRule>,
+    /// Pause whatever media is playing (Spotify, browser video, etc.) while a
+    /// dictation is in progress, then resume exactly the sessions we paused when
+    /// it ends. Off by default so it never surprises the user. Windows-only for
+    /// now; a no-op on other platforms.
+    #[serde(default = "default_pause_media_while_recording")]
+    pub pause_media_while_recording: bool,
 }
 
 fn default_model() -> String {
@@ -527,6 +533,10 @@ fn default_vad_enabled() -> bool {
 }
 
 fn default_noise_suppression_enabled() -> bool {
+    false
+}
+
+fn default_pause_media_while_recording() -> bool {
     false
 }
 
@@ -825,6 +835,24 @@ pub fn get_default_settings() -> AppSettings {
         },
     );
 
+    #[cfg(target_os = "macos")]
+    let default_replace_selection_shortcut = "control+option+space";
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    let default_replace_selection_shortcut = "ctrl+alt+space";
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    let default_replace_selection_shortcut = "alt+ctrl+space";
+
+    bindings.insert(
+        "ai_replace_selection".to_string(),
+        ShortcutBinding {
+            id: "ai_replace_selection".to_string(),
+            name: "AI Replace Selection".to_string(),
+            description: "Cuts the selected text, records a spoken instruction, and pastes back the AI-transformed result.".to_string(),
+            default_binding: default_replace_selection_shortcut.to_string(),
+            current_binding: default_replace_selection_shortcut.to_string(),
+        },
+    );
+
     AppSettings {
         settings_schema_version: default_settings_schema_version(),
         bindings,
@@ -883,6 +911,7 @@ pub fn get_default_settings() -> AppSettings {
         overlay_style: default_overlay_style(),
         noise_suppression_enabled: default_noise_suppression_enabled(),
         text_replacement_rules: Vec::new(),
+        pause_media_while_recording: default_pause_media_while_recording(),
     }
 }
 
@@ -1370,12 +1399,14 @@ mod tests {
         raw["custom_words"] = serde_json::json!(["Keep", "Me"]);
         raw["vad_enabled"] = serde_json::json!("yes");
         raw["noise_suppression_enabled"] = serde_json::json!(42);
+        raw["pause_media_while_recording"] = serde_json::json!("nope");
         raw["history_limit"] = serde_json::json!("not a number");
 
         let repaired = repair_settings_value(&raw);
 
         assert!(repaired.vad_enabled);
         assert!(!repaired.noise_suppression_enabled);
+        assert!(!repaired.pause_media_while_recording);
         assert_eq!(repaired.custom_words, vec!["Keep", "Me"]);
     }
 

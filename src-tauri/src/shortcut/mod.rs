@@ -392,8 +392,11 @@ fn register_all_shortcuts_for_implementation(
             continue;
         }
 
-        // Skip post-processing shortcut when the feature is disabled
-        if id == "transcribe_with_post_process" && !current_settings.post_process_enabled {
+        // Skip post-processing shortcut when the feature is disabled. AI Replace
+        // Selection reuses the same LLM provider, so it's gated the same way.
+        if (id == "transcribe_with_post_process" || id == "ai_replace_selection")
+            && !current_settings.post_process_enabled
+        {
             continue;
         }
 
@@ -885,16 +888,15 @@ pub fn change_post_process_enabled_setting(app: AppHandle, enabled: bool) -> Res
     settings.post_process_enabled = enabled;
     settings::write_settings(&app, settings.clone());
 
-    // Register or unregister the post-processing shortcut
-    if let Some(binding) = settings
-        .bindings
-        .get("transcribe_with_post_process")
-        .cloned()
-    {
-        if enabled {
-            let _ = register_shortcut(&app, binding);
-        } else {
-            let _ = unregister_shortcut(&app, binding);
+    // Register or unregister the post-processing shortcut, and AI Replace
+    // Selection alongside it — both need the same LLM provider configured.
+    for binding_id in ["transcribe_with_post_process", "ai_replace_selection"] {
+        if let Some(binding) = settings.bindings.get(binding_id).cloned() {
+            if enabled {
+                let _ = register_shortcut(&app, binding);
+            } else {
+                let _ = unregister_shortcut(&app, binding);
+            }
         }
     }
 
@@ -1172,6 +1174,18 @@ pub fn change_noise_suppression_enabled_setting(
 ) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.noise_suppression_enabled = enabled;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_pause_media_while_recording_setting(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.pause_media_while_recording = enabled;
     settings::write_settings(&app, settings);
     Ok(())
 }

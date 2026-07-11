@@ -18,10 +18,11 @@ use ferrous_opencc::{config::BuiltinConfig, OpenCC};
 use log::{debug, error, warn};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Instant;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use tauri::Manager;
 use tauri::{AppHandle, Emitter};
+use tauri_plugin_clipboard_manager::ClipboardExt;
 
 #[derive(Clone, serde::Serialize)]
 struct RecordingErrorEvent {
@@ -46,9 +47,23 @@ pub trait ShortcutAction: Send + Sync {
     fn stop(&self, app: &AppHandle, binding_id: &str, shortcut_str: &str);
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TranscribeMode {
+    Dictate,
+    DictateWithPostProcess,
+    /// Cuts the current OS-level text selection via Ctrl+X, records a spoken
+    /// instruction through the same pipeline as normal dictation, sends both
+    /// to the post-processing LLM, and pastes the result back in place.
+    ReplaceSelection,
+}
+
 // Transcribe Action
 struct TranscribeAction {
-    post_process: bool,
+    mode: TranscribeMode,
+    /// Text captured via Ctrl+X at the start of a `ReplaceSelection` session,
+    /// consumed once the spoken instruction finishes transcribing. Unused by
+    /// the other two modes.
+    captured_selection: Mutex<Option<String>>,
 }
 
 /// Field name for structured output JSON schema
@@ -316,6 +331,121 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
     }
 }
 
+/// Cuts the currently-selected text (via simulated Ctrl+X) from whatever
+/// app has OS focus and returns it via the clipboard. If nothing was
+/// actually selected, the cut is a no-op and the clipboard is unchanged —
+/// detected by comparing before/after, so the user's real clipboard
+/// contents are restored and `None` is returned rather than treating stale
+/// clipboard content as "the selection".
+fn capture_selected_text(app: &AppHandle) -> Option<String> {
+    let enigo_state = app.try_state::<crate::input::EnigoState>()?;
+    let clipboard = app.clipboard();
+    let previous = clipboard.read_text().ok();
+
+    {
+        let mut enigo = enigo_state.0.lock().ok()?;
+        crate::input::send_cut_ctrl_x(&mut enigo).ok()?;
+    }
+
+    // Give the focused app a moment to write the cut text to the clipboard.
+    std::thread::sleep(Duration::from_millis(150));
+
+    let cut = clipboard.read_text().ok()?;
+    if cut.trim().is_empty() || Some(&cut) == previous.as_ref() {
+        if let Some(prev) = previous {
+            let _ = clipboard.write_text(prev);
+        }
+        return None;
+    }
+
+    Some(cut)
+}
+
+/// Transforms `selected_text` according to a spoken `instruction`, using the
+/// same LLM provider configured for post-processing (no separate provider
+/// setup for this feature — if post-processing isn't configured, this can't
+/// run either). Returns `None` whenever the transform can't happen right
+/// now, mirroring [`post_process_transcription`]'s "skip, don't error" style
+/// — the caller falls back to restoring the original selection unchanged.
+async fn transform_selection_with_llm(
+    settings: &AppSettings,
+    selected_text: &str,
+    instruction: &str,
+) -> Option<String> {
+    if selected_text.trim().is_empty() || instruction.trim().is_empty() {
+        debug!("AI Replace Selection skipped: empty selection or instruction");
+        return None;
+    }
+
+    let provider = settings.active_post_process_provider().cloned()?;
+
+    let model = settings
+        .post_process_models
+        .get(&provider.id)
+        .cloned()
+        .unwrap_or_default();
+    if model.trim().is_empty() {
+        debug!(
+            "AI Replace Selection skipped: provider '{}' has no model configured",
+            provider.id
+        );
+        return None;
+    }
+
+    let api_key = settings
+        .post_process_api_keys
+        .get(&provider.id)
+        .cloned()
+        .unwrap_or_default();
+
+    let (reasoning_effort, reasoning) = match provider.id.as_str() {
+        "custom" => (Some("none".to_string()), None),
+        "openrouter" => (
+            None,
+            Some(crate::llm_client::ReasoningConfig {
+                effort: Some("none".to_string()),
+                exclude: Some(true),
+            }),
+        ),
+        _ => (None, None),
+    };
+
+    const SYSTEM_PROMPT: &str = "You are a text transformation engine. You will receive an \
+        INSTRUCTION and a piece of TEXT. Apply the instruction to the text and return ONLY the \
+        transformed text, ready to be pasted directly in place of the original — no \
+        explanations, no surrounding quotes, no markdown, no commentary. Preserve the original \
+        language of TEXT unless the instruction explicitly asks to change it.";
+
+    let user_content = format!(
+        "INSTRUCTION:\n{}\n\nTEXT:\n{}",
+        instruction.trim(),
+        selected_text
+    );
+
+    match crate::llm_client::send_chat_completion_with_schema(
+        &provider,
+        api_key,
+        &model,
+        user_content,
+        Some(SYSTEM_PROMPT.to_string()),
+        None,
+        reasoning_effort,
+        reasoning,
+    )
+    .await
+    {
+        Ok(Some(result)) if !result.trim().is_empty() => Some(strip_invisible_chars(&result)),
+        Ok(_) => {
+            debug!("AI Replace Selection: LLM returned an empty response");
+            None
+        }
+        Err(err) => {
+            error!("AI Replace Selection LLM call failed: {}", err);
+            None
+        }
+    }
+}
+
 async fn maybe_convert_chinese_variant(
     effective_language: &str,
     transcription: &str,
@@ -442,6 +572,19 @@ impl ShortcutAction for TranscribeAction {
         let start_time = Instant::now();
         debug!("TranscribeAction::start called for binding: {}", binding_id);
 
+        if self.mode == TranscribeMode::ReplaceSelection {
+            match capture_selected_text(app) {
+                Some(text) => {
+                    *self.captured_selection.lock().unwrap() = Some(text);
+                }
+                None => {
+                    debug!("AI Replace Selection: no text selected, aborting");
+                    let _ = app.emit("ai-replace-selection-error", "no_selection");
+                    return;
+                }
+            }
+        }
+
         // Load model in the background
         let tm = app.state::<Arc<TranscriptionManager>>();
         let rm = app.state::<Arc<AudioRecordingManager>>();
@@ -486,6 +629,12 @@ impl ShortcutAction for TranscribeAction {
             VadPolicy::Offline
         };
         let noise_suppression_enabled = settings.noise_suppression_enabled;
+        // Pause any playing media off-thread so it never adds keypress->capture
+        // latency. resume_paused_media() (called on every teardown path) is a
+        // no-op when this didn't pause anything.
+        if settings.pause_media_while_recording {
+            std::thread::spawn(crate::media_control::pause_playing_media);
+        }
         if model_supports_streaming {
             tm.start_stream();
         }
@@ -564,6 +713,9 @@ impl ShortcutAction for TranscribeAction {
             // Starting failed (for example due to blocked microphone permissions).
             // Revert UI state so we don't stay stuck in the recording overlay.
             tm.cancel_stream();
+            // If we paused media on the way in, bring it back — no recording will
+            // reach the stop path to do it for us.
+            std::thread::spawn(crate::media_control::resume_paused_media);
             utils::hide_recording_overlay(app);
             change_tray_icon(app, TrayIconState::Idle);
             if let Some(err) = recording_error {
@@ -620,11 +772,19 @@ impl ShortcutAction for TranscribeAction {
         // Unmute before playing audio feedback so the stop sound is audible
         rm.remove_mute();
 
+        // Resume any media we paused when recording started. No-op if the
+        // pause-media setting was off or nothing was playing.
+        std::thread::spawn(crate::media_control::resume_paused_media);
+
         // Play audio feedback for recording stop
         play_feedback_sound(app, SoundType::Stop);
 
         let binding_id = binding_id.to_string(); // Clone binding_id for the async task
-        let post_process = self.post_process;
+        let post_process = self.mode == TranscribeMode::DictateWithPostProcess;
+        let is_replace_selection = self.mode == TranscribeMode::ReplaceSelection;
+        // Take ownership now — `self` can't be captured into the `'static`
+        // async task below, and this session's selection is only needed once.
+        let captured_selection = self.captured_selection.lock().unwrap().take();
         let cancel_generation = rm.cancel_generation();
 
         tauri::async_runtime::spawn(async move {
@@ -723,16 +883,41 @@ impl ShortcutAction for TranscribeAction {
                                 transcription
                             );
 
-                            if post_process {
+                            if post_process || is_replace_selection {
                                 if use_streaming_overlay {
                                     tm.emit_stream_working(StreamWorkKind::Polishing);
                                 } else {
                                     show_processing_overlay(&ah);
                                 }
                             }
-                            let processed =
+
+                            let processed = if is_replace_selection {
+                                let selection = captured_selection.unwrap_or_default();
+                                let transform_settings = get_settings(&ah);
+                                let final_text = match transform_selection_with_llm(
+                                    &transform_settings,
+                                    &selection,
+                                    &transcription,
+                                )
+                                .await
+                                {
+                                    Some(result) => result,
+                                    None => {
+                                        error!(
+                                            "AI Replace Selection failed or unavailable — restoring the original selection"
+                                        );
+                                        selection
+                                    }
+                                };
+                                ProcessedTranscription {
+                                    final_text,
+                                    post_processed_text: None,
+                                    post_process_prompt: None,
+                                }
+                            } else {
                                 process_transcription_output(&ah, &transcription, post_process)
-                                    .await;
+                                    .await
+                            };
 
                             if rm.was_cancelled_since(cancel_generation) {
                                 debug!("Transcription operation cancelled before paste");
@@ -741,8 +926,11 @@ impl ShortcutAction for TranscribeAction {
                                 return;
                             }
 
-                            // Save to history if WAV was saved
-                            if wav_saved {
+                            // Save to history if WAV was saved. Skipped for AI Replace
+                            // Selection — the "transcription" here is a spoken
+                            // instruction, not dictation content worth keeping, and its
+                            // WAV is removed instead of lingering as an orphan file.
+                            if wav_saved && !is_replace_selection {
                                 if let Err(err) = hm.save_entry(
                                     file_name,
                                     transcription,
@@ -752,6 +940,8 @@ impl ShortcutAction for TranscribeAction {
                                 ) {
                                     error!("Failed to save history entry: {}", err);
                                 }
+                            } else if wav_saved && is_replace_selection {
+                                let _ = std::fs::remove_file(&wav_path_for_verify);
                             }
 
                             if processed.final_text.is_empty() {
@@ -879,12 +1069,23 @@ pub static ACTION_MAP: Lazy<HashMap<String, Arc<dyn ShortcutAction>>> = Lazy::ne
     map.insert(
         "transcribe".to_string(),
         Arc::new(TranscribeAction {
-            post_process: false,
+            mode: TranscribeMode::Dictate,
+            captured_selection: Mutex::new(None),
         }) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "transcribe_with_post_process".to_string(),
-        Arc::new(TranscribeAction { post_process: true }) as Arc<dyn ShortcutAction>,
+        Arc::new(TranscribeAction {
+            mode: TranscribeMode::DictateWithPostProcess,
+            captured_selection: Mutex::new(None),
+        }) as Arc<dyn ShortcutAction>,
+    );
+    map.insert(
+        "ai_replace_selection".to_string(),
+        Arc::new(TranscribeAction {
+            mode: TranscribeMode::ReplaceSelection,
+            captured_selection: Mutex::new(None),
+        }) as Arc<dyn ShortcutAction>,
     );
     map.insert(
         "cancel".to_string(),

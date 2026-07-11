@@ -51,6 +51,34 @@ pub fn send_paste_ctrl_v(enigo: &mut Enigo) -> Result<(), String> {
     Ok(())
 }
 
+/// Sends a Ctrl+X or Cmd+X cut command using platform-specific virtual key
+/// codes, mirroring [`send_paste_ctrl_v`]. Used to grab the currently
+/// selected text in whatever app has focus (via the clipboard) before
+/// transforming it.
+pub fn send_cut_ctrl_x(enigo: &mut Enigo) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    let (modifier_key, x_key_code) = (Key::Meta, Key::Other(7)); // kVK_ANSI_X
+    #[cfg(target_os = "windows")]
+    let (modifier_key, x_key_code) = (Key::Control, Key::Other(0x58)); // VK_X
+    #[cfg(target_os = "linux")]
+    let (modifier_key, x_key_code) = (Key::Control, Key::Unicode('x'));
+
+    enigo
+        .key(modifier_key, enigo::Direction::Press)
+        .map_err(|e| format!("Failed to press modifier key: {}", e))?;
+    enigo
+        .key(x_key_code, enigo::Direction::Click)
+        .map_err(|e| format!("Failed to click X key: {}", e))?;
+
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
+    enigo
+        .key(modifier_key, enigo::Direction::Release)
+        .map_err(|e| format!("Failed to release modifier key: {}", e))?;
+
+    Ok(())
+}
+
 /// Sends a Ctrl+Shift+V paste command.
 /// This is commonly used in terminal applications on Linux to paste without formatting.
 /// Note: On Wayland, this may not work - callers should check for Wayland and use alternative methods.
