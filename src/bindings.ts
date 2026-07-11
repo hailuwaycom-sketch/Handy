@@ -472,6 +472,19 @@ export const commands = {
       else return { status: "error", error: e as any };
     }
   },
+  async updateTextReplacementRules(
+    rules: TextReplacementRule[],
+  ): Promise<Result<null, string>> {
+    try {
+      return {
+        status: "ok",
+        data: await TAURI_INVOKE("update_text_replacement_rules", { rules }),
+      };
+    } catch (e) {
+      if (e instanceof Error) throw e;
+      else return { status: "error", error: e as any };
+    }
+  },
   /**
    * Temporarily unregister a binding while the user is editing it in the UI.
    * This avoids firing the action while keys are being recorded.
@@ -1335,6 +1348,12 @@ export type AppSettings = {
    * `overlay_position` (position `none` → style `None`).
    */
   overlay_style?: OverlayStyle;
+  /**
+   * Deterministic find/replace rules applied after custom-words correction
+   * and filler-word filtering — the last step of the synchronous
+   * post-processing pipeline.
+   */
+  text_replacement_rules?: TextReplacementRule[];
 };
 export type AudioDevice = { index: string; name: string; is_default: boolean };
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter";
@@ -1533,6 +1552,13 @@ export type StreamTextEvent = { committed: string; tentative: string };
  * Semantic kind of "working" phase, used to localize the spinner label.
  */
 export type StreamWorkKind = "transcribing" | "polishing";
+export type TextReplacementRule = {
+  id: string;
+  find: string;
+  replace: string;
+  use_regex?: boolean;
+  case_sensitive?: boolean;
+};
 export type TranscribeAcceleratorSetting = "auto" | "cpu" | "gpu";
 export type TypingTool =
   "auto" | "wtype" | "kwtype" | "dotool" | "ydotool" | "xdotool";
