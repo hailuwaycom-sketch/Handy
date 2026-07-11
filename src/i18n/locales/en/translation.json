@@ -12,7 +12,7 @@
     "general": "General",
     "models": "Models",
     "advanced": "Advanced",
-    "postProcessing": "Post Process",
+    "postProcessing": "AI Refine",
     "history": "History",
     "debug": "Debug",
     "about": "About"
@@ -234,7 +234,7 @@
       },
       "noiseCancellation": {
         "label": "Noise Cancellation",
-        "description": "Cleans background noise from the microphone before transcribing (uses more CPU per recorded second)"
+        "description": "Cleans steady background noise from the microphone (fan hum, buzzing, static) before transcribing. Doesn't filter out music or other voices. Uses more CPU per recorded second."
       },
       "pauseMediaWhileRecording": {
         "label": "Pause Media While Dictating",

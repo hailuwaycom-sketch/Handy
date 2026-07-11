@@ -12,7 +12,7 @@
     "general": "General",
     "models": "Modelos",
     "advanced": "Avanzado",
-    "postProcessing": "Post Proceso",
+    "postProcessing": "Refinado con IA",
     "history": "Historial",
     "debug": "Depuración",
     "about": "Acerca de"
@@ -234,7 +234,7 @@
       },
       "noiseCancellation": {
         "label": "Cancelación de Ruido",
-        "description": "Limpia el ruido de fondo del micrófono antes de transcribir (usa más CPU por segundo grabado)"
+        "description": "Limpia ruido de fondo estacionario del micrófono (ventilador, zumbido, estática) antes de transcribir. No filtra música ni otras voces. Usa más CPU por segundo grabado."
       },
       "pauseMediaWhileRecording": {
         "label": "Pausar Media al Dictar",
