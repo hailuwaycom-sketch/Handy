@@ -1,0 +1,20 @@
+{
+  "date": "2026-07-11",
+  "composite": 93,
+  "stack_note": "Tauri+Rust+React desktop app, no Supabase/InsForge — Datos/RLS excluded and weights renormalized across Seguridad/Cache/Web",
+  "dimensions": {
+    "seguridad": 92,
+    "datos": null,
+    "cache": 95,
+    "web": 92
+  },
+  "findings": { "critical": 0, "high": 0, "medium": 3, "low": 6 },
+  "coverage": {
+    "owasp": "n/a (not a web-app threat model)",
+    "threatdb_run": "generic checks only (secrets, xss, command-injection) — 3/14 checks applicable to this stack",
+    "rls_tables": "n/a (no Supabase/InsForge)",
+    "npm_audit": "vulnerabilities found, all in devDependencies (not shipped in production build)",
+    "cargo_audit": "not run (cargo-audit not installed)"
+  },
+  "deep_layer": { "ran": false, "resilience_score": null }
+}

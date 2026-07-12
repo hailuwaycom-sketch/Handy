@@ -1,169 +1,593 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>VozImperio — Habla. Imperio escribe.</title>
-<meta name="description" content="Presiona una tecla, habla y transcribe. Gratis, open source, sin login y local por defecto. Dictado por voz para Windows." />
-<link rel="icon" href="favicon.ico" />
-<style>
-  :root{
-    --bg:#0a0c10; --bg-soft:#11151c; --panel:#141a22;
-    --gold:#ffc83d; --gold-soft:#ffdd85; --mint:#7ed3a4;
-    --text:#eef2f7; --muted:#9aa7b6; --line:rgba(255,255,255,.08);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0}
-  body{
-    background:radial-gradient(1200px 600px at 50% -10%, #16202c 0%, var(--bg) 55%) fixed;
-    color:var(--text); font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    -webkit-font-smoothing:antialiased; overflow-x:hidden;
-  }
-  a{color:inherit}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
-  header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-  .brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.2px}
-  .brand img{width:38px;height:38px}
-  .brand b{font-size:19px}
-  .nav a{color:var(--muted);text-decoration:none;margin-left:22px;font-size:14px}
-  .nav a:hover{color:var(--gold)}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VozImperio — Habla. Imperio escribe.</title>
+    <meta
+      name="description"
+      content="Presiona una tecla, habla y transcribe. Gratis, open source, sin login y local por defecto. Dictado por voz para Windows."
+    />
+    <meta property="og:title" content="VozImperio — Habla. Imperio escribe." />
+    <meta
+      property="og:description"
+      content="Presiona una tecla, habla y transcribe. Gratis, open source, sin login y local por defecto. Dictado por voz para Windows."
+    />
+    <meta property="og:image" content="assets/vozimperio-logo.svg" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="VozImperio — Habla. Imperio escribe." />
+    <meta
+      name="twitter:description"
+      content="Presiona una tecla, habla y transcribe. Gratis, open source, sin login y local por defecto. Dictado por voz para Windows."
+    />
+    <meta name="twitter:image" content="assets/vozimperio-logo.svg" />
+    <link rel="icon" href="favicon.ico" />
+    <style>
+      :root {
+        --bg: #0a0c10;
+        --bg-soft: #11151c;
+        --panel: #141a22;
+        --gold: #ffc83d;
+        --gold-soft: #ffdd85;
+        --mint: #7ed3a4;
+        --text: #eef2f7;
+        --muted: #9aa7b6;
+        --line: rgba(255, 255, 255, 0.08);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: radial-gradient(
+            1200px 600px at 50% -10%,
+            #16202c 0%,
+            var(--bg) 55%
+          )
+          fixed;
+        color: var(--text);
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      a {
+        color: inherit;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 22px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .brand img {
+        width: 38px;
+        height: 38px;
+      }
+      .brand b {
+        font-size: 19px;
+      }
+      .nav a {
+        color: var(--muted);
+        text-decoration: none;
+        margin-left: 22px;
+        font-size: 14px;
+      }
+      .nav a:hover {
+        color: var(--gold);
+      }
 
-  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:56px 0 40px}
-  .kicker{display:inline-flex;align-items:center;gap:8px;color:var(--gold);font-size:13px;font-weight:600;
-    border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--bg-soft)}
-  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}
-  h1{font-size:clamp(34px,5vw,54px);line-height:1.05;margin:18px 0 10px;letter-spacing:-.5px}
-  h1 .g{background:linear-gradient(90deg,var(--gold),var(--gold-soft));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{color:var(--muted);font-size:18px;max-width:46ch}
-  .cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:26px}
-  .btn{border:0;cursor:pointer;font:inherit;font-weight:600;border-radius:12px;padding:13px 20px;text-decoration:none;display:inline-flex;gap:9px;align-items:center;transition:transform .15s ease,box-shadow .15s}
-  .btn-primary{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#241a00;box-shadow:0 10px 30px -10px rgba(255,200,61,.6)}
-  .btn-primary:hover{transform:translateY(-2px)}
-  .btn-ghost{background:var(--panel);color:var(--text);border:1px solid var(--line)}
-  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
-  .meta{margin-top:16px;color:var(--muted);font-size:13px}
-  .meta b{color:var(--mint);font-weight:600}
+      .hero {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 48px;
+        align-items: center;
+        padding: 56px 0 40px;
+      }
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gold);
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 12px;
+        background: var(--bg-soft);
+      }
+      .kicker .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 10px var(--mint);
+      }
+      h1 {
+        font-size: clamp(34px, 5vw, 54px);
+        line-height: 1.05;
+        margin: 18px 0 10px;
+        letter-spacing: -0.5px;
+      }
+      h1 .g {
+        background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 18px;
+        max-width: 46ch;
+      }
+      .cta {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 26px;
+      }
+      .btn {
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 13px 20px;
+        text-decoration: none;
+        display: inline-flex;
+        gap: 9px;
+        align-items: center;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s;
+      }
+      .btn-primary {
+        background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+        color: #241a00;
+        box-shadow: 0 10px 30px -10px rgba(255, 200, 61, 0.6);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+      }
+      .btn-ghost {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--line);
+      }
+      .btn-ghost:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+      }
+      .meta {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .meta b {
+        color: var(--mint);
+        font-weight: 600;
+      }
 
-  /* Ventana de producto con demo animada */
-  .app{background:linear-gradient(180deg,#0e131a,#0b0f15);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 40px 80px -30px #000}
-  .app .bar{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);background:#0c1119}
-  .app .bar i{width:11px;height:11px;border-radius:50%;background:#2a3340}
-  .app .bar .t{margin-left:8px;color:var(--muted);font-size:12px}
-  .app .body{padding:22px}
-  .listen{display:flex;align-items:center;gap:14px;color:var(--muted);font-size:13px;margin-bottom:16px}
-  .wave{display:flex;align-items:flex-end;gap:3px;height:22px}
-  .wave span{width:4px;background:var(--mint);border-radius:2px;animation:w 1s ease-in-out infinite}
-  .wave span:nth-child(1){animation-delay:0s}
-  .wave span:nth-child(2){animation-delay:.15s;background:var(--gold)}
-  .wave span:nth-child(3){animation-delay:.3s}
-  .wave span:nth-child(4){animation-delay:.45s;background:var(--gold)}
-  .wave span:nth-child(5){animation-delay:.6s}
-  @keyframes w{0%,100%{height:5px}50%{height:22px}}
-  .doc{min-height:130px;background:#0a0e14;border:1px solid var(--line);border-radius:10px;padding:16px;font-size:15px;line-height:1.7}
-  .doc .cursor{display:inline-block;width:2px;height:1.05em;background:var(--gold);vertical-align:-2px;margin-left:1px;animation:blink 1s step-end infinite}
-  @keyframes blink{50%{opacity:0}}
-  .key{display:inline-block;border:1px solid var(--line);border-bottom-width:3px;border-radius:7px;padding:2px 9px;background:#0c1119;color:var(--gold-soft);font-weight:600;font-size:13px}
+      /* Ventana de producto con demo animada */
+      .app {
+        background: linear-gradient(180deg, #0e131a, #0b0f15);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 40px 80px -30px #000;
+      }
+      .app .bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        background: #0c1119;
+      }
+      .app .bar i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #2a3340;
+      }
+      .app .bar .t {
+        margin-left: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .app .body {
+        padding: 22px;
+      }
+      .listen {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      .wave {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 22px;
+      }
+      .wave span {
+        width: 4px;
+        background: var(--mint);
+        border-radius: 2px;
+        animation: w 1s ease-in-out infinite;
+      }
+      .wave span:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .wave span:nth-child(2) {
+        animation-delay: 0.15s;
+        background: var(--gold);
+      }
+      .wave span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .wave span:nth-child(4) {
+        animation-delay: 0.45s;
+        background: var(--gold);
+      }
+      .wave span:nth-child(5) {
+        animation-delay: 0.6s;
+      }
+      @keyframes w {
+        0%,
+        100% {
+          height: 5px;
+        }
+        50% {
+          height: 22px;
+        }
+      }
+      .doc {
+        min-height: 130px;
+        background: #0a0e14;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+      .doc .cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.05em;
+        background: var(--gold);
+        vertical-align: -2px;
+        margin-left: 1px;
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      .key {
+        display: inline-block;
+        border: 1px solid var(--line);
+        border-bottom-width: 3px;
+        border-radius: 7px;
+        padding: 2px 9px;
+        background: #0c1119;
+        color: var(--gold-soft);
+        font-weight: 600;
+        font-size: 13px;
+      }
 
-  .feats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:26px 0 8px}
-  .feat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .feat b{display:block;color:var(--gold);font-size:22px}
-  .feat span{color:var(--muted);font-size:13px}
+      .feats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        padding: 26px 0 8px;
+      }
+      .feat {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .feat b {
+        display: block;
+        color: var(--gold);
+        font-size: 22px;
+      }
+      .feat span {
+        color: var(--muted);
+        font-size: 13px;
+      }
 
-  section.block{padding:56px 0;border-top:1px solid var(--line);margin-top:40px}
-  h2{font-size:28px;margin:0 0 26px;letter-spacing:-.3px}
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .step{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:22px}
-  .step .n{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#241a00;font-weight:700;margin-bottom:12px}
-  .step h3{margin:0 0 6px;font-size:17px}
-  .step p{margin:0;color:var(--muted);font-size:14px}
+      section.block {
+        padding: 56px 0;
+        border-top: 1px solid var(--line);
+        margin-top: 40px;
+      }
+      h2 {
+        font-size: 28px;
+        margin: 0 0 26px;
+        letter-spacing: -0.3px;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+      .step {
+        background: var(--bg-soft);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 22px;
+      }
+      .step .n {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+        color: #241a00;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      .step h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
 
-  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
-  footer a{color:var(--mint);text-decoration:none}
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 30px 0;
+        color: var(--muted);
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      footer a {
+        color: var(--mint);
+        text-decoration: none;
+      }
 
-  @media(max-width:820px){
-    .hero{grid-template-columns:1fr;gap:30px}
-    .feats{grid-template-columns:repeat(2,1fr)}
-    .steps{grid-template-columns:1fr}
-    .nav{display:none}
-  }
-  @media(prefers-reduced-motion:reduce){.wave span{animation:none;height:14px}.cursor{animation:none}}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header>
-    <div class="brand"><img src="assets/vozimperio-logo.svg" alt="VozImperio"/> <b>VozImperio</b></div>
-    <nav class="nav">
-      <a href="#como">Cómo funciona</a>
-      <a href="#descargar">Descargar</a>
-      <a href="https://github.com/hailuwaycom-sketch/Handy" target="_blank" rel="noopener">Código</a>
-    </nav>
-  </header>
+      @media (max-width: 820px) {
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 30px;
+        }
+        .feats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .steps {
+          grid-template-columns: 1fr;
+        }
+        .nav {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .wave span {
+          animation: none;
+          height: 14px;
+        }
+        .cursor {
+          animation: none;
+        }
+      }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 100;
+        background: var(--panel);
+        color: var(--gold);
+        padding: 10px 16px;
+        border-radius: 0 0 10px 0;
+        border: 1px solid var(--line);
+      }
+      .skip-link:focus {
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+    <div class="wrap" id="main">
+      <header>
+        <div class="brand">
+          <img src="assets/vozimperio-logo.svg" alt="VozImperio" />
+          <b>VozImperio</b>
+        </div>
+        <nav class="nav">
+          <a href="#como">Cómo funciona</a>
+          <a href="#descargar">Descargar</a>
+          <a
+            href="https://github.com/hailuwaycom-sketch/Handy"
+            target="_blank"
+            rel="noopener"
+            >Código</a
+          >
+        </nav>
+      </header>
 
-  <section class="hero">
-    <div>
-      <span class="kicker"><span class="dot"></span> Dictado por voz · local · Hackathon Imperial</span>
-      <h1>Habla.<br><span class="g">Imperio escribe.</span></h1>
-      <p class="sub">Presiona una tecla, habla y transcribe. Gratis, open source, sin login y <b>local por defecto</b> — tu voz nunca sale de tu máquina.</p>
-      <div class="cta">
-        <a class="btn btn-primary" id="dl" href="downloads/VozImperio-Windows.exe" download>⬇ Descargar gratis</a>
-        <button class="btn btn-ghost" id="demo">▶ Ver demo</button>
+      <section class="hero">
+        <div>
+          <span class="kicker"
+            ><span class="dot"></span> Dictado por voz · local · Hackathon
+            Imperial</span
+          >
+          <h1>Habla.<br /><span class="g">Imperio escribe.</span></h1>
+          <p class="sub">
+            Presiona una tecla, habla y transcribe. Gratis, open source, sin
+            login y <b>local por defecto</b> — tu voz nunca sale de tu máquina.
+          </p>
+          <div class="cta">
+            <a
+              class="btn btn-primary"
+              id="dl"
+              href="downloads/VozImperio-Windows.exe"
+              download
+              ><span aria-hidden="true">⬇</span> Descargar gratis</a
+            >
+            <button class="btn btn-ghost" id="demo">
+              <span aria-hidden="true">▶</span> Ver demo
+            </button>
+          </div>
+          <p class="meta">
+            <b>1 tecla</b> para grabar · <b>ES</b> nativo · <b>Windows</b> · sin
+            telemetría
+          </p>
+        </div>
+
+        <div class="app" id="preview">
+          <div class="bar">
+            <i></i><i></i><i></i><span class="t">VozImperio — Dictado</span>
+          </div>
+          <div class="body">
+            <div class="listen">
+              <span class="wave"
+                ><span></span><span></span><span></span><span></span
+                ><span></span
+              ></span>
+              Escuchando… mantén <span class="key">Ctrl</span> y habla
+            </div>
+            <div class="doc">
+              <span id="typed" aria-live="polite"></span
+              ><span class="cursor"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="feats">
+        <div class="feat">
+          <b>1 tecla</b><span>Push-to-talk. Presiona, habla, suelta.</span>
+        </div>
+        <div class="feat">
+          <b>Local</b><span>Whisper corre en tu equipo. Cero nube.</span>
+        </div>
+        <div class="feat">
+          <b>ES</b><span>Optimizado para dictado en español.</span>
+        </div>
+        <div class="feat">
+          <b>Open</b><span>Código abierto, sin login, gratis.</span>
+        </div>
       </div>
-      <p class="meta"><b>1 tecla</b> para grabar · <b>ES</b> nativo · <b>Windows</b> · sin telemetría</p>
+
+      <section class="block" id="como">
+        <h2>Cómo funciona</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="n">1</div>
+            <h3>Presiona</h3>
+            <p>Un atajo global inicia la grabación desde cualquier app.</p>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <h3>Habla</h3>
+            <p>
+              El VAD filtra silencios y Whisper transcribe tu voz al instante,
+              en local.
+            </p>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <h3>Listo</h3>
+            <p>
+              El texto se pega en la app activa. Sin copiar, sin pegar, sin
+              fricción.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="descargar" style="text-align: center">
+        <h2>Descárgalo y dicta en 30 segundos</h2>
+        <p class="sub" style="margin: 0 auto 24px">
+          Build de Windows lista. Sin instaladores raros, sin cuentas.
+        </p>
+        <a
+          class="btn btn-primary"
+          href="downloads/VozImperio-Windows.exe"
+          download
+          style="font-size: 17px; padding: 15px 26px"
+          ><span aria-hidden="true">⬇</span> Descargar VozImperio para
+          Windows</a
+        >
+      </section>
+
+      <footer>
+        <span
+          >VozImperio · fork de
+          <a href="https://github.com/cjpais/Handy">Handy</a> · Imperio
+          Agéntico</span
+        >
+        <span>Habla. Imperio escribe.</span>
+      </footer>
     </div>
 
-    <div class="app" id="preview">
-      <div class="bar"><i></i><i></i><i></i><span class="t">VozImperio — Dictado</span></div>
-      <div class="body">
-        <div class="listen"><span class="wave"><span></span><span></span><span></span><span></span><span></span></span> Escuchando… mantén <span class="key">Ctrl</span> y habla</div>
-        <div class="doc"><span id="typed"></span><span class="cursor"></span></div>
-      </div>
-    </div>
-  </section>
-
-  <div class="feats">
-    <div class="feat"><b>1 tecla</b><span>Push-to-talk. Presiona, habla, suelta.</span></div>
-    <div class="feat"><b>Local</b><span>Whisper corre en tu equipo. Cero nube.</span></div>
-    <div class="feat"><b>ES</b><span>Optimizado para dictado en español.</span></div>
-    <div class="feat"><b>Open</b><span>Código abierto, sin login, gratis.</span></div>
-  </div>
-
-  <section class="block" id="como">
-    <h2>Cómo funciona</h2>
-    <div class="steps">
-      <div class="step"><div class="n">1</div><h3>Presiona</h3><p>Un atajo global inicia la grabación desde cualquier app.</p></div>
-      <div class="step"><div class="n">2</div><h3>Habla</h3><p>El VAD filtra silencios y Whisper transcribe tu voz al instante, en local.</p></div>
-      <div class="step"><div class="n">3</div><h3>Listo</h3><p>El texto se pega en la app activa. Sin copiar, sin pegar, sin fricción.</p></div>
-    </div>
-  </section>
-
-  <section class="block" id="descargar" style="text-align:center">
-    <h2>Descárgalo y dicta en 30 segundos</h2>
-    <p class="sub" style="margin:0 auto 24px">Build de Windows lista. Sin instaladores raros, sin cuentas.</p>
-    <a class="btn btn-primary" href="downloads/VozImperio-Windows.exe" download style="font-size:17px;padding:15px 26px">⬇ Descargar VozImperio para Windows</a>
-  </section>
-
-  <footer>
-    <span>VozImperio · fork de <a href="https://github.com/cjpais/Handy">Handy</a> · Imperio Agéntico</span>
-    <span>Habla. Imperio escribe.</span>
-  </footer>
-</div>
-
-<script>
-  // Demo de dictado animada (landing 1.1)
-  var phrase = "Presioné una tecla, hablé, y VozImperio escribió esto por mí — todo local, en español.";
-  var el = document.getElementById('typed');
-  var i = 0, timer = null;
-  function type(){
-    if(i <= phrase.length){ el.textContent = phrase.slice(0,i++); timer = setTimeout(type, 42); }
-  }
-  function run(){ clearTimeout(timer); i = 0; el.textContent=''; type(); }
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce){ el.textContent = phrase; } else { run(); }
-  document.getElementById('demo').addEventListener('click', function(){
-    document.getElementById('preview').scrollIntoView({behavior: reduce?'auto':'smooth', block:'center'});
-    run();
-  });
-</script>
-</body>
+    <script>
+      // Demo de dictado animada (landing 1.1)
+      var phrase =
+        "Presioné una tecla, hablé, y VozImperio escribió esto por mí — todo local, en español.";
+      var el = document.getElementById("typed");
+      var i = 0,
+        timer = null;
+      function type() {
+        if (i <= phrase.length) {
+          el.textContent = phrase.slice(0, i++);
+          timer = setTimeout(type, 42);
+        }
+      }
+      function run() {
+        clearTimeout(timer);
+        i = 0;
+        el.textContent = "";
+        type();
+      }
+      var reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      if (reduce) {
+        el.textContent = phrase;
+      } else {
+        run();
+      }
+      document.getElementById("demo").addEventListener("click", function () {
+        document.getElementById("preview").scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "center",
+        });
+        run();
+      });
+    </script>
+  </body>
 </html>
