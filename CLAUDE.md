@@ -12,7 +12,7 @@
 ## Principios
 
 - **Un solo stack perfeccionado (Golden Path).** No das opciones tecnicas.
-- **El proceso > el producto.** Auto-Blindaje: error → fix → _candidato_; si reincide → _regla_. No toda 1ª vez es ley.
+- **El proceso > el producto.** Auto-Blindaje: error → fix → *candidato*; si reincide → *regla*. No toda 1ª vez es ley.
 - **Blueprint-First.** NUNCA escribas codigo sin un Blueprint aprobado.
 - **Feature-First.** Todo el contexto de una feature en `src/features/[nombre]/`.
 - **El humano es Co-piloto.** Tu preguntas, el valida. No escribas codigo sin su "go".
@@ -26,52 +26,46 @@ Cuando el usuario pide algo, enruta al tool correcto. Las referencias a
 (`.claude/`, `.codex/`, `.opencode/`, `.cursor/`, `.gemini/` segun el target).
 
 ### "Quiero construir algo nuevo"
-
 → `/plan` (activa La Herreria: `.claude/skills/la-herreria/SKILL.md`)
 
 ### "Necesito agregar una feature"
 
-| Necesita                    | Comando                                    |
-| --------------------------- | ------------------------------------------ |
-| Auth                        | `/add-login`                               |
-| Pagos                       | `/add-payments` (decision Polar vs Stripe) |
-| Emails                      | `/add-emails` (Resend + React Email)       |
-| PWA/Mobile                  | `/add-mobile` (push, iOS compatible)       |
-| UI Kit / Component Showcase | `/add-ui-kit` (FRESH o REDESIGN)           |
-| Patrones BD (Supabase)      | Leer skill `supabase`                      |
-| Patrones BD (InsForge)      | Leer skill `insforge`                      |
-| InsForge setup              | `/add-insforge`                            |
-| Landing copy-first          | `/landing`                                 |
-| Landing cinematica          | `/website-3d`                              |
-| Feature IA                  | Leer `.claude/ai_templates/_index.md`      |
-| Imagenes                    | Leer skill `image-generation`              |
-| Visuales marketing          | `/video-visuals`                           |
+| Necesita | Comando |
+|----------|---------|
+| Auth | `/add-login` |
+| Pagos | `/add-payments` (decision Polar vs Stripe) |
+| Emails | `/add-emails` (Resend + React Email) |
+| PWA/Mobile | `/add-mobile` (push, iOS compatible) |
+| UI Kit / Component Showcase | `/add-ui-kit` (FRESH o REDESIGN) |
+| Patrones BD (Supabase) | Leer skill `supabase` |
+| Patrones BD (InsForge) | Leer skill `insforge` |
+| InsForge setup | `/add-insforge` |
+| Landing copy-first | `/landing` |
+| Landing cinematica | `/website-3d` |
+| Feature IA | Leer `.claude/ai_templates/_index.md` |
+| Imagenes | Leer skill `image-generation` |
+| Visuales marketing | `/video-visuals` |
 
 ### "Quiero mejorar lo que tengo"
 
-| Necesita                     | Comando                                                                 |
-| ---------------------------- | ----------------------------------------------------------------------- |
-| Review de diseno             | `/critique`                                                             |
-| Polish visual                | `/polish`                                                               |
-| Alinear design system        | `/normalize`                                                            |
-| Performance/A11y/SEO         | `/web-audit`                                                            |
-| Rediseno completo            | `/redesign`                                                             |
+| Necesita | Comando |
+|----------|---------|
+| Review de diseno | `/critique` |
+| Polish visual | `/polish` |
+| Alinear design system | `/normalize` |
+| Performance/A11y/SEO | `/web-audit` |
+| Rediseno completo | `/redesign` |
 | **Auditar TODO el proyecto** | **`/temple`** (Seguridad + Datos/RLS + Cache + Web → 1 reporte + score) |
-| **Buscar vulnerabilidades**  | **`/adversarial-review`** (4 agentes atacantes + Codex)                 |
+| **Buscar vulnerabilidades** | **`/adversarial-review`** (4 agentes atacantes + Codex) |
 
 ### "Estrategia/negocio"
-
 → `/crisol` (pipeline completo: 7 estrategias + dashboard ejecutivo + veredicto go/no-go)
 → Individual: `/brujula`, `/precio`, `/estrella`, `/rivales`, `/roi`, `/metas`, `/lanzamiento`
 
 ### "Personalizar proyecto" → `/forge-init` (despues de /plan)
-
 ### "Activar skill inactivo" → `/forge-activate`
-
 ### "Despachar" → `/despachar`
-
 ### "Retomar trabajo" → `/avivar` (lee `.claude/memory/`)
-
 ### "Optimizar un skill" → `/autoresearch`
 
 ---
@@ -98,15 +92,15 @@ IDEA → /plan → Blueprint (10 skills) → aprobacion → /crisol (opcional) �
 
 ## Golden Path
 
-| Capa       | Tecnologia                                    |
-| ---------- | --------------------------------------------- |
-| Framework  | Next.js 16 + React 19 + TypeScript            |
-| Estilos    | Tailwind CSS 3.4 + shadcn/ui                  |
-| Backend    | Supabase o InsForge (Auth + PostgreSQL + RLS) |
-| AI Engine  | Vercel AI SDK v5 + OpenRouter                 |
-| Validacion | Zod                                           |
-| Estado     | Zustand                                       |
-| Testing    | Playwright MCP                                |
+| Capa | Tecnologia |
+|------|------------|
+| Framework | Next.js 16 + React 19 + TypeScript |
+| Estilos | Tailwind CSS 3.4 + shadcn/ui |
+| Backend | Supabase o InsForge (Auth + PostgreSQL + RLS) |
+| AI Engine | Vercel AI SDK v5 + OpenRouter |
+| Validacion | Zod |
+| Estado | Zustand |
+| Testing | Playwright MCP |
 
 ## Arquitectura
 
@@ -174,11 +168,11 @@ reincide  →  codificar REGLA viva                      →  ya blinda
 
 **Umbral por riesgo del artefacto que blindaría la regla:**
 
-| Artefacto                        | Riesgo | Cuándo se codifica                                                        |
-| -------------------------------- | ------ | ------------------------------------------------------------------------- |
-| Prosa / guía / tip               | bajo   | reversible barato → basta con que sea claramente general (incluso 1ª vez) |
-| Convención / patrón de código    | medio  | reincidencia (**n≥2**)                                                    |
-| Hook, gate bloqueante, migración | alto   | reincidencia (**n≥2**) **+ ratificación humana explícita**                |
+| Artefacto | Riesgo | Cuándo se codifica |
+|---|---|---|
+| Prosa / guía / tip | bajo | reversible barato → basta con que sea claramente general (incluso 1ª vez) |
+| Convención / patrón de código | medio | reincidencia (**n≥2**) |
+| Hook, gate bloqueante, migración | alto | reincidencia (**n≥2**) **+ ratificación humana explícita** |
 
 **Candidato** (1ª vez): registrar en `## Aprendizajes (Auto-Blindaje Activo)` de
 tu wrapper, bajo `### Candidatos`, con qué pasó, el fix, y el **trigger** que lo
@@ -213,7 +207,46 @@ Para detalles de MCPs, hooks, agentes, comandos completos, testing patterns, y s
 
 ---
 
-_Planifica primero. Construye con confianza._
+*Planifica primero. Construye con confianza.*
+# Forge para Claude Code
+
+> **Antes de leer esto, lee `FORGE.md`** en este mismo directorio (o en la raíz
+> del proyecto si estás trabajando en un proyecto generado). Ese archivo es el
+> Factory OS canonico. Este wrapper solo añade lo que Claude Code hace distinto.
+
+## Capacidades nativas en Claude Code
+
+- **TodoWrite:** tracking de progreso estructurado. Usalo para fases del
+  Blueprint, no para subtareas atomicas. El Yunque lo invoca por fase.
+- **AskUserQuestion:** branching con opciones (max 4). Usalo cuando haya 2-3
+  alternativas claras con tradeoffs. Recomienda una con "(Recommended)".
+  No lo uses para confirmaciones binarias triviales — esas van en texto.
+- **Slash commands:** los 44 comandos viven en `.claude/commands/*.md`. Se
+  invocan con `/nombre` literal.
+- **Skills:** 21 skills en `.claude/skills/<nombre>/SKILL.md`. Se cargan al
+  matchear sus triggers.
+- **Subagents:** 12 agentes en `.claude/agents/*.md`. Invocados con `Agent`.
+- **Hooks:** configurados en `.claude/settings.json` (PreToolUse,
+  PostToolUse, Stop). 8 scripts bash en `.claude/hooks/`.
+- **MCPs:** configurados en `.mcp.json` (formato JSON nativo). Plantilla en
+  `.claude/example.mcp.json`.
+
+## Convenciones de paths
+
+Cuando `FORGE.md` dice `.claude/X`, eso es **literal** para vos. No hay
+transpilación. Todos los archivos del proyecto Forge viven bajo `.claude/`.
+
+## Comportamiento esperado
+
+- **Plan mode:** respeta el flow `IDEA → /plan → Blueprint → /build`. NUNCA
+  escribas codigo sin Blueprint aprobado.
+- **El Yunque:** motor de ejecucion en `.claude/prompts/el-yunque.md`.
+  Invocado por `/build` cuando el usuario elige "Build Manual".
+- **La Forja:** modo paralelo con worktrees, en `.claude/skills/la-forja/`.
+- **Pausa explicita:** si el output excede contexto util, pausa con
+  `[PAUSADO — X de Y completo. Envia "continuar" para reanudar desde: Z]`.
+
+---
 
 <!-- FORGE:PRESERVE:START — todo lo de abajo es tuyo, forge update no lo toca -->
 

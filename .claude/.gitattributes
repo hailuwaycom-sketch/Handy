@@ -1,0 +1,7 @@
+# Estos 6 archivos vienen del source de Forge en LF (el resto del source es
+# CRLF). Con core.autocrlf=true el working tree los convertia a CRLF, lo que
+# hacia que `forge update` los marcara como conflicto en CADA corrida.
+# Pinearlos a LF alinea el working tree con el template → sin falsos conflictos.
+commands/kanban.md    text eol=lf
+hooks/test-hooks.sh   text eol=lf
+skills/backlog/**     text eol=lf
