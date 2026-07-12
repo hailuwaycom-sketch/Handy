@@ -214,3 +214,15 @@ Para detalles de MCPs, hooks, agentes, comandos completos, testing patterns, y s
 ---
 
 _Planifica primero. Construye con confianza._
+
+<!-- FORGE:PRESERVE:START — todo lo de abajo es tuyo, forge update no lo toca -->
+
+## Aprendizajes (Auto-Blindaje Activo)
+
+### Candidatos
+
+_(vacío — se registran aquí la 1ª vez que aparece un error, con su trigger)_
+
+### Reglas vivas
+
+_(vacío — se codifican aquí cuando un candidato reincide o es de alto riesgo ya ratificado)_
