@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="es-ES">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Voz Imperio — Manual de marca</title>
+<style>
+  :root{
+    --verde:#0b140e;
+    --verde-2:#101d15;
+    --verde-3:#16241a;
+    --oro:#e4b24c;
+    --oro-claro:#f6d372;
+    --oro-oscuro:#c6892c;
+    --crema:#fbf6ea;
+    --fg:#f3efe4;
+    --muted:#9aa89b;
+    --border:rgba(233,214,150,0.15);
+    --ok:#5fbf7e;
+    --no:#d98a6a;
+    --font-display:'Iowan Old Style','Charter',Georgia,'Times New Roman',serif;
+    --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    --font-mono:ui-monospace,'SFMono-Regular',Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--verde);color:var(--fg);font-family:var(--font-body);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;text-wrap:pretty}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
+  section{padding:clamp(56px,8vw,104px) 0;border-top:1px solid var(--border)}
+  .kicker{font:600 12px/1 var(--font-mono);letter-spacing:.24em;text-transform:uppercase;
+    color:var(--oro);margin-bottom:18px}
+  h2{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,4vw,42px);
+    line-height:1.06;letter-spacing:-.02em;margin-bottom:14px}
+  h2 + .sub{color:var(--muted);max-width:60ch;font-size:clamp(15px,1.5vw,17px);margin-bottom:40px}
+
+  /* Nav */
+  nav.top{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);background:color-mix(in oklab,var(--verde) 82%,transparent);
+    border-bottom:1px solid var(--border)}
+  nav.top .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:20px}
+  .brand-lockup{display:flex;align-items:center;gap:11px;font-family:var(--font-display);
+    font-size:19px;letter-spacing:.01em}
+  .brand-lockup img{width:30px;height:30px;border-radius:7px}
+  .navlinks{display:flex;gap:26px;font-size:13.5px;color:var(--muted);letter-spacing:.02em}
+  .navlinks a{transition:color .15s}
+  .navlinks a:hover{color:var(--oro-claro)}
+  @media(max-width:720px){.navlinks{display:none}}
+
+  /* Hero */
+  header.hero{padding:clamp(64px,12vw,140px) 0 clamp(48px,8vw,96px);border-top:0;
+    display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+  .hero-word{font-family:var(--font-display);font-weight:600;
+    font-size:clamp(52px,9vw,104px);line-height:.94;letter-spacing:-.03em}
+  .hero-word .imperio{color:var(--oro)}
+  .hero-desc{color:var(--muted);max-width:44ch;margin:22px 0 30px;font-size:clamp(16px,1.7vw,19px)}
+  .hero-tags{display:flex;flex-wrap:wrap;gap:9px}
+  .tag{font:600 12px/1 var(--font-mono);letter-spacing:.08em;padding:8px 13px;border-radius:999px;
+    border:1px solid var(--border);color:var(--muted)}
+  .hero-mark{justify-self:center;width:min(340px,80%);aspect-ratio:1;position:relative}
+  .hero-mark::before{content:"";position:absolute;inset:-16%;border-radius:50%;
+    background:radial-gradient(circle at 50% 42%,rgba(228,178,76,.22),transparent 62%);
+    filter:blur(8px)}
+  .hero-mark img{position:relative;width:100%;height:100%;object-fit:contain;
+    filter:drop-shadow(0 26px 60px rgba(0,0,0,.55))}
+  @media(max-width:820px){header.hero{grid-template-columns:1fr;gap:36px;text-align:left}
+    .hero-mark{justify-self:start;width:min(260px,64%)}}
+
+  /* Marca maestra */
+  .mark-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:22px}
+  @media(max-width:820px){.mark-grid{grid-template-columns:1fr}}
+  .panel{background:var(--verde-2);border:1px solid var(--border);border-radius:20px;
+    padding:30px;display:flex;flex-direction:column}
+  .panel .cap{font:600 11px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:6px}
+  .panel .cap-desc{color:var(--muted);font-size:13.5px;margin-top:auto;padding-top:20px}
+  .stage{flex:1;display:grid;place-items:center;padding:22px;min-height:190px}
+  .stage img,.stage svg{max-width:78%;max-height:230px}
+  .stage.chec-light{background:#f4f1e8;border-radius:12px}
+  .stage.check{border-radius:12px;
+    background-color:#0e1a12;
+    background-image:linear-gradient(45deg,rgba(255,255,255,.045) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.045) 75%),linear-gradient(45deg,rgba(255,255,255,.045) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.045) 75%);
+    background-size:18px 18px;background-position:0 0,9px 9px}
+
+  /* Protección */
+  .protect{background:var(--verde-2);border:1px dashed var(--border);border-radius:16px;
+    padding:clamp(24px,5vw,52px);display:grid;place-items:center;position:relative}
+  .protect .box{position:relative;padding:14%;border:1px solid var(--oro-oscuro);border-radius:10px}
+  .protect .box img{width:clamp(120px,20vw,168px);height:auto;display:block}
+  .protect .lbl{position:absolute;font:600 11px/1 var(--font-mono);color:var(--oro);letter-spacing:.1em}
+
+  /* Variantes */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+  .card{background:var(--verde-2);border:1px solid var(--border);border-radius:18px;overflow:hidden;
+    display:flex;flex-direction:column}
+  .preview{aspect-ratio:16/11;display:grid;place-items:center;padding:22px}
+  .preview svg{max-width:60%;max-height:82%;filter:drop-shadow(0 8px 20px rgba(0,0,0,.3))}
+  .preview.check{background-color:#0e1a12;
+    background-image:linear-gradient(45deg,rgba(255,255,255,.045) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.045) 75%),linear-gradient(45deg,rgba(255,255,255,.045) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.045) 75%);
+    background-size:16px 16px;background-position:0 0,8px 8px}
+  .preview.light{background:#f4f1e8}
+  .card-body{padding:15px 17px 17px;border-top:1px solid var(--border)}
+  .card-body h3{font-size:14.5px;font-weight:600;margin-bottom:3px}
+  .card-body .use{color:var(--muted);font-size:12.5px;margin-bottom:13px;min-height:30px}
+  .dl-label{font:600 10px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 7px}
+  .btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px}
+  button,.btn{cursor:pointer;font:550 12.5px var(--font-body);color:var(--fg);
+    background:var(--verde-3);border:1px solid var(--border);border-radius:9px;padding:7px 11px;
+    transition:.15s;display:inline-block}
+  button:hover,.btn:hover{border-color:var(--oro);color:var(--oro-claro)}
+  button.primary,.btn.primary{background:linear-gradient(180deg,var(--oro-claro),var(--oro));
+    color:#2a1c05;border-color:transparent;font-weight:650}
+  button.primary:hover,.btn.primary:hover{filter:brightness(1.06);color:#2a1c05}
+  button:active,.btn:active{transform:translateY(1px)}
+  button[disabled],.btn[disabled]{opacity:.6;cursor:progress;filter:none}
+  a:focus-visible,button:focus-visible,.btn:focus-visible{outline:2px solid var(--oro-claro);outline-offset:2px}
+  .card-status{font:12px/1.45 var(--font-body);color:var(--no);margin-top:2px}
+  .card-status:empty{display:none}
+  .noscript{grid-column:1/-1;color:var(--muted);font-size:14px;border:1px dashed var(--border);
+    border-radius:12px;padding:16px 18px;margin:0}
+
+  /* Color */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+  .sw{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--verde-2)}
+  .sw .chip{height:96px}
+  .sw .meta{padding:13px 15px}
+  .sw .name{font-size:14px;font-weight:600}
+  .sw .hex{font:12px/1.5 var(--font-mono);color:var(--muted);margin-top:4px;letter-spacing:.02em}
+
+  /* Tipografía */
+  .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:720px){.type-grid{grid-template-columns:1fr}}
+  .type-card{background:var(--verde-2);border:1px solid var(--border);border-radius:18px;padding:28px 30px}
+  .type-card .role{font:600 11px/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--oro);margin-bottom:16px}
+  .specimen-serif{font-family:var(--font-display);font-size:clamp(40px,6vw,64px);line-height:1;
+    letter-spacing:-.02em}
+  .specimen-serif small{display:block;font-size:15px;letter-spacing:0;color:var(--muted);
+    font-family:var(--font-body);margin-top:14px}
+  .specimen-sans{font-size:19px;line-height:1.5}
+  .specimen-sans .scale{color:var(--muted);font-size:14px;margin-top:14px}
+  .glyphs{font-family:var(--font-display);font-size:26px;letter-spacing:.06em;margin-top:18px;color:var(--muted)}
+
+  /* Usos */
+  .use-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:720px){.use-grid{grid-template-columns:1fr}}
+  .use-col h3{display:flex;align-items:center;gap:9px;font-size:15px;margin-bottom:14px;font-weight:600}
+  .use-col ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .use-col li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:#dfe4dc;
+    background:var(--verde-2);border:1px solid var(--border);border-radius:12px;padding:13px 15px}
+  .use-col li svg{flex:0 0 auto;margin-top:2px}
+  .ic-ok{color:var(--ok)} .ic-no{color:var(--no)}
+
+  /* Descargas master */
+  .master{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;
+    background:var(--verde-2);border:1px solid var(--border);border-radius:20px;padding:clamp(22px,4vw,34px)}
+  @media(max-width:640px){.master{grid-template-columns:1fr}}
+  .master .mimg{width:130px;height:130px;border-radius:22px;object-fit:contain;
+    background:radial-gradient(circle at 50% 40%,#18301c,#0b140e)}
+  .master h3{font-family:var(--font-display);font-size:22px;margin-bottom:6px}
+  .master p{color:var(--muted);font-size:14px;margin-bottom:16px;max-width:52ch}
+  .note{margin-top:18px;display:flex;gap:11px;align-items:flex-start;color:var(--muted);font-size:13.5px}
+  .note svg{flex:0 0 auto;margin-top:1px;color:var(--oro)}
+  .note b{color:var(--fg);font-weight:600}
+
+  footer{border-top:1px solid var(--border);padding:30px 0 46px;color:var(--muted);
+    font-size:12.5px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *{transition-duration:.001ms !important;animation-duration:.001ms !important}
+    button:active,.btn:active{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<nav class="top" data-od-id="nav">
+  <div class="wrap">
+    <a class="brand-lockup" href="#top" data-od-id="nav-brand"><img src="vozimperio-logo-exacto.png" alt="Marca Voz Imperio"/> Voz Imperio</a>
+    <div class="navlinks">
+      <a href="#marca">Marca</a>
+      <a href="#variantes">Variantes</a>
+      <a href="#color">Color</a>
+      <a href="#tipografia">Tipografía</a>
+      <a href="#usos">Usos</a>
+      <a href="#descargas">Descargas</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+<div class="wrap" id="top">
+  <header class="hero" data-od-id="hero">
+    <div>
+      <div class="kicker">Manual de marca</div>
+      <h1 class="hero-word" data-od-id="hero-wordmark">Voz <span class="imperio">Imperio</span></h1>
+      <p class="hero-desc">Sistema de identidad de la marca de audio Voz Imperio: un micrófono coronado en dorado sobre verde imperio. Aquí viven el logo maestro, sus variantes y las reglas para usarlo bien en cualquier soporte.</p>
+      <div class="hero-tags">
+        <span class="tag">Verde imperio</span>
+        <span class="tag">Dorado bruñido</span>
+        <span class="tag">Micrófono + corona</span>
+      </div>
+    </div>
+    <div class="hero-mark" data-od-id="hero-mark">
+      <img src="vozimperio-logo-exacto.png" alt="Logo de Voz Imperio: micrófono con corona dorada sobre insignia verde oscuro"/>
+    </div>
+  </header>
+</div>
+
+<section id="marca" data-od-id="sec-marca">
+  <div class="wrap">
+    <div class="kicker">01 · La marca</div>
+    <h2>Logo maestro y símbolo</h2>
+    <p class="sub">La insignia completa es la representación principal. El símbolo suelto (micrófono + corona) se usa cuando ya hay contexto de marca o el espacio es mínimo, como un avatar o favicon.</p>
+    <div class="mark-grid">
+      <div class="panel" data-od-id="panel-insignia">
+        <div class="cap">Insignia · isologo principal</div>
+        <div class="stage check"><img src="vozimperio-logo-exacto.png" alt="Insignia Voz Imperio"/></div>
+        <div class="cap-desc">Uso por defecto. Fondo verde imperio con esquinas redondeadas, estilo ícono de aplicación.</div>
+      </div>
+      <div class="panel" data-od-id="panel-simbolo">
+        <div class="cap">Símbolo · sin fondo</div>
+        <div class="stage check" id="stage-symbol"></div>
+        <div class="cap-desc">Micrófono coronado aislado, sobre transparente. Para avatares, sellos y marcas de agua.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:22px">
+      <div class="protect" data-od-id="area-proteccion">
+        <div class="box">
+          <span class="lbl" style="top:-9px;left:14px;background:var(--verde-2);padding:0 6px">área de protección</span>
+          <img src="vozimperio-logo-exacto.png" alt="Área de protección del logo"/>
+        </div>
+      </div>
+      <p class="sub" style="margin:16px 0 0">Deja alrededor del logo un margen libre igual a la altura de la corona. Nada de texto ni gráficos deben invadir ese espacio.</p>
+    </div>
+  </div>
+</section>
+
+<section id="variantes" data-od-id="sec-variantes">
+  <div class="wrap">
+    <div class="kicker">02 · Variantes</div>
+    <h2>Cuatro versiones para cada fondo</h2>
+    <p class="sub">Cada variante se descarga como vector (SVG) y como imagen (PNG/JPG) en 256, 512 y 1024&nbsp;px. El SVG y el PNG salen con fondo transparente; el JPG, sobre fondo sólido.</p>
+    <div class="grid" id="variant-grid"><noscript><p class="noscript">Activa JavaScript para previsualizar y descargar las variantes (SVG, PNG y JPG). Los archivos maestros de la sección Descargas se descargan sin JavaScript.</p></noscript></div>
+  </div>
+</section>
+
+<section id="color" data-od-id="sec-color">
+  <div class="wrap">
+    <div class="kicker">03 · Color</div>
+    <h2>Paleta</h2>
+    <p class="sub">Verde imperio y dorado hacen el 90&nbsp;% del trabajo; la crema aporta el respiro del micrófono. Un solo acento dorado por composición.</p>
+    <div class="swatches" id="swatches"><noscript><p class="noscript">Verde imperio #0B140E · Verde superficie #16241A · Dorado #E4B24C · Dorado claro #F6D372 · Dorado oscuro #C6892C · Crema #FBF6EA</p></noscript></div>
+  </div>
+</section>
+
+<section id="tipografia" data-od-id="sec-tipografia">
+  <div class="wrap">
+    <div class="kicker">04 · Tipografía</div>
+    <h2>Serif con carácter, sans para leer</h2>
+    <p class="sub">La display serif da el aire editorial y regio del nombre; la sans del sistema mantiene los textos largos legibles y neutros.</p>
+    <div class="type-grid">
+      <div class="type-card" data-od-id="type-display">
+        <div class="role">Display · titulares y wordmark</div>
+        <div class="specimen-serif">Voz Imperio
+          <small>Iowan Old Style / Charter / Georgia — serif · peso 600 · tracking −0.02em</small>
+        </div>
+        <div class="glyphs">Aa Bb Cc · 0123456789 · &amp; ?</div>
+      </div>
+      <div class="type-card" data-od-id="type-body">
+        <div class="role">Cuerpo · textos e interfaz</div>
+        <div class="specimen-sans">Sistema operativo nativo para máxima nitidez en pantalla. Ideal para descripciones, botones y textos largos sin ruido.
+          <div class="scale">Escala: 12 · 14 · 16 · 19 · 24 px — interlínea 1.5–1.6</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="usos" data-od-id="sec-usos">
+  <div class="wrap">
+    <div class="kicker">05 · Buenas prácticas</div>
+    <h2>Qué sí, qué no</h2>
+    <p class="sub">La consistencia es la marca. Estas reglas evitan que el logo se degrade entre soportes.</p>
+    <div class="use-grid">
+      <div class="use-col" data-od-id="usos-si">
+        <h3><span class="ic-ok"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5 5-5.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Correcto</h3>
+        <ul>
+          <li><span class="ic-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5l4 4 10-10.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Usar la insignia sobre verde imperio o fondos oscuros con contraste.</li>
+          <li><span class="ic-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5l4 4 10-10.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Sobre fondo claro, usar la variante monocromo negra.</li>
+          <li><span class="ic-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5l4 4 10-10.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Respetar el área de protección alrededor del logo.</li>
+          <li><span class="ic-ok"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5l4 4 10-10.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Escalar siempre desde el SVG para máxima nitidez.</li>
+        </ul>
+      </div>
+      <div class="use-col" data-od-id="usos-no">
+        <h3><span class="ic-no"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke-linecap="round"/></svg></span> Incorrecto</h3>
+        <ul>
+          <li><span class="ic-no"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span> No deformar, estirar ni rotar el logo.</li>
+          <li><span class="ic-no"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span> No cambiar los colores ni recolorear el dorado.</li>
+          <li><span class="ic-no"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span> No añadir sombras, contornos ni degradados extra.</li>
+          <li><span class="ic-no"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span> No colocar la versión a color sobre fondos de bajo contraste.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="descargas" data-od-id="sec-descargas">
+  <div class="wrap">
+    <div class="kicker">06 · Descargas</div>
+    <h2>Archivos maestros</h2>
+    <p class="sub">El calco exacto del logo original, en los tres formatos. Para variantes monocromo o insignia, usa los botones de la sección de variantes.</p>
+    <div class="master" data-od-id="master-download">
+      <img class="mimg" src="vozimperio-logo-exacto.png" alt="Logo maestro Voz Imperio"/>
+      <div>
+        <h3>Logo maestro · Voz Imperio</h3>
+        <p>Idéntico al original, en alta resolución. SVG y PNG con fondo transparente; JPG sobre fondo blanco.</p>
+        <div class="btns">
+          <a class="btn primary" href="vozimperio-logo-exacto.svg" download>SVG</a>
+          <a class="btn" href="vozimperio-logo-exacto.png" download>PNG · 1024</a>
+          <a class="btn" href="vozimperio-logo-exacto.jpg" download>JPG · 1024</a>
+          <a class="btn" href="vozimperio-icono.svg" download>Símbolo vectorial</a>
+        </div>
+        <div class="note">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01" stroke-linecap="round"/></svg>
+          <div><b>Transparencia:</b> el SVG y el PNG conservan el fondo transparente. El <b>JPG no admite transparencia</b>, por eso va sobre fondo sólido. Para web usa SVG o PNG.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer data-od-id="footer">
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;width:100%;margin:0 auto;padding:0 clamp(20px,4vw,48px)">
+    <span>Voz Imperio · Manual de marca</span>
+    <span style="font-family:var(--font-mono)">#0B140E · #E4B24C · #FBF6EA</span>
+  </div>
+</footer>
+
+<script>
+/* ---------- Geometría del símbolo (fuente única) ---------- */
+function iconGroup(sfx, mode){
+  if(mode==='color'){
+    return `
+    <path d="M94 96 L100 58 L114 80 L128 44 L142 80 L156 58 L162 96 Z" fill="url(#g-${sfx})"/>
+    <circle cx="100" cy="58" r="4.5" fill="url(#g-${sfx})"/><circle cx="128" cy="44" r="5" fill="url(#g-${sfx})"/><circle cx="156" cy="58" r="4.5" fill="url(#g-${sfx})"/>
+    <path d="M96 150 L96 160 Q96 194 128 194 Q160 194 160 160 L160 150" fill="none" stroke="url(#g-${sfx})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="128" y1="194" x2="128" y2="222" stroke="url(#g-${sfx})" stroke-width="8" stroke-linecap="round"/>
+    <line x1="106" y1="222" x2="150" y2="222" stroke="url(#g-${sfx})" stroke-width="8" stroke-linecap="round"/>
+    <rect x="102" y="98" width="52" height="84" rx="26" fill="url(#c-${sfx})"/>
+    <g stroke="url(#g-${sfx})" stroke-width="5" stroke-linecap="round"><line x1="116" y1="128" x2="116" y2="168"/><line x1="128" y1="118" x2="128" y2="176"/><line x1="140" y1="128" x2="140" y2="168"/></g>`;
+  }
+  const c=mode;
+  return `
+    <path d="M94 96 L100 58 L114 80 L128 44 L142 80 L156 58 L162 96 Z" fill="${c}"/>
+    <circle cx="100" cy="58" r="4.5" fill="${c}"/><circle cx="128" cy="44" r="5" fill="${c}"/><circle cx="156" cy="58" r="4.5" fill="${c}"/>
+    <path d="M96 150 L96 160 Q96 194 128 194 Q160 194 160 160 L160 150" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="128" y1="194" x2="128" y2="222" stroke="${c}" stroke-width="8" stroke-linecap="round"/>
+    <line x1="106" y1="222" x2="150" y2="222" stroke="${c}" stroke-width="8" stroke-linecap="round"/>
+    <rect x="102" y="98" width="52" height="84" rx="26" fill="none" stroke="${c}" stroke-width="6"/>
+    <g stroke="${c}" stroke-width="5" stroke-linecap="round"><line x1="116" y1="128" x2="116" y2="168"/><line x1="128" y1="118" x2="128" y2="176"/><line x1="140" y1="128" x2="140" y2="168"/></g>`;
+}
+function defsColor(s){return `<defs>
+  <linearGradient id="g-${s}" x1="128" y1="40" x2="128" y2="228" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F6D372"/><stop offset="0.5" stop-color="#E4B24C"/><stop offset="1" stop-color="#C6892C"/></linearGradient>
+  <linearGradient id="c-${s}" x1="128" y1="98" x2="128" y2="182" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FBF6EA"/><stop offset="1" stop-color="#E7DBC1"/></linearGradient>
+</defs>`;}
+function buildSVG(v){
+  if(v==='badge'){return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">${defsColor(v)}<defs><radialGradient id="bg-${v}" cx="0.5" cy="0.4" r="0.78"><stop offset="0" stop-color="#183024"/><stop offset="1" stop-color="#0B140E"/></radialGradient></defs><rect width="256" height="256" rx="56" fill="url(#bg-${v})"/><g transform="translate(36 31) scale(0.72)">${iconGroup(v,'color')}</g></svg>`;}
+  if(v==='color'){return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 288" width="256" height="288">${defsColor(v)}${iconGroup(v,'color')}</svg>`;}
+  if(v==='white'){return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 288" width="256" height="288">${iconGroup(v,'#FFFFFF')}</svg>`;}
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 288" width="256" height="288">${iconGroup(v,'#14110B')}</svg>`;
+}
+function dims(v){return v==='badge'?[256,256]:[256,288];}
+
+/* ---------- Descargas ---------- */
+function saveBlob(b,n){const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+function downloadSVG(v){saveBlob(new Blob([buildSVG(v)],{type:'image/svg+xml'}),`vozimperio-${v}.svg`);}
+function statusFor(btn){const c=btn&&btn.closest('.card');return c?c.querySelector('.card-status'):null;}
+function downloadRaster(v,size,type,bg,btn){
+  const st=statusFor(btn); if(st)st.textContent='';
+  const restore=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  const done=()=>{if(btn){btn.disabled=false;btn.textContent=restore;}};
+  const fail=m=>{if(st)st.textContent=m;done();};
+  const img=new Image();
+  img.onload=function(){
+    try{
+      const [vw,vh]=dims(v),m=Math.max(vw,vh);
+      const cw=Math.round(size*vw/m),ch=Math.round(size*vh/m);
+      const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+      const ctx=cv.getContext('2d');
+      if(!ctx){return fail('Este navegador no permite exportar imágenes.');}
+      if(bg){ctx.fillStyle=bg;ctx.fillRect(0,0,cw,ch);}
+      ctx.drawImage(img,0,0,cw,ch);
+      const ext=type==='image/jpeg'?'jpg':'png';
+      cv.toBlob(function(b){ if(b){saveBlob(b,`vozimperio-${v}-${size}.${ext}`);done();} else {fail('No se pudo generar la imagen.');} },type,0.92);
+    }catch(_){ fail('No se pudo generar la imagen en este navegador.'); }
+  };
+  img.onerror=function(){ fail('No se pudo cargar el gráfico para exportar.'); };
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(buildSVG(v));
+}
+
+/* ---------- Render ---------- */
+document.getElementById('stage-symbol').innerHTML=buildSVG('color');
+
+const VARIANTS=[
+  {id:'color',name:'Color · transparente',use:'Uso principal sobre fondos oscuros o neutros.',prev:'check',jpgBg:'#ffffff'},
+  {id:'badge',name:'Insignia (app icon)',use:'Cuadro redondeado verde, estilo ícono de app.',prev:'check',jpgBg:'#0b140e'},
+  {id:'white',name:'Blanco · monocromo',use:'Para fondos oscuros, foto y video.',prev:'check',jpgBg:'#0b140e'},
+  {id:'black',name:'Negro · monocromo',use:'Para fondos claros, documentos e impresión.',prev:'light',jpgBg:'#ffffff'}
+];
+const SIZES=[256,512,1024];
+const grid=document.getElementById('variant-grid');
+VARIANTS.forEach(v=>{
+  const el=document.createElement('article');el.className='card';el.setAttribute('data-od-id','card-'+v.id);
+  const png=SIZES.map(s=>`<button data-act="png" data-v="${v.id}" data-s="${s}" aria-label="Descargar PNG de ${v.name} a ${s} píxeles">${s}</button>`).join('');
+  const jpg=SIZES.map(s=>`<button data-act="jpg" data-v="${v.id}" data-s="${s}" aria-label="Descargar JPG de ${v.name} a ${s} píxeles">${s}</button>`).join('');
+  el.innerHTML=`
+    <div class="preview ${v.prev}">${buildSVG(v.id)}</div>
+    <div class="card-body">
+      <h3>${v.name}</h3><p class="use">${v.use}</p>
+      <p class="dl-label">Vector</p><div class="btns"><button class="primary" data-act="svg" data-v="${v.id}" aria-label="Descargar SVG de ${v.name}">SVG · transparente</button></div>
+      <p class="dl-label">PNG · transparente (px)</p><div class="btns">${png}</div>
+      <p class="dl-label">JPG · fondo sólido (px)</p><div class="btns">${jpg}</div>
+      <p class="card-status" role="status" aria-live="polite"></p>
+    </div>`;
+  grid.appendChild(el);
+});
+grid.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.disabled)return;
+  const act=b.dataset.act,v=b.dataset.v,s=parseInt(b.dataset.s,10);
+  const variant=VARIANTS.find(x=>x.id===v);
+  if(act==='svg')downloadSVG(v);
+  else if(act==='png')downloadRaster(v,s,'image/png',null,b);
+  else if(act==='jpg')downloadRaster(v,s,'image/jpeg',variant.jpgBg,b);
+});
+
+/* Paleta */
+const COLORS=[
+  {name:'Verde imperio',hex:'#0B140E',ok:'Fondo principal',bg:'#0B140E'},
+  {name:'Verde superficie',hex:'#16241A',ok:'Paneles y tarjetas',bg:'#16241A'},
+  {name:'Dorado',hex:'#E4B24C',ok:'Acento · corona y marco',bg:'#E4B24C'},
+  {name:'Dorado claro',hex:'#F6D372',ok:'Brillo del degradado',bg:'#F6D372'},
+  {name:'Dorado oscuro',hex:'#C6892C',ok:'Sombra del degradado',bg:'#C6892C'},
+  {name:'Crema',hex:'#FBF6EA',ok:'Cápsula del micrófono',bg:'#FBF6EA'}
+];
+const sw=document.getElementById('swatches');
+COLORS.forEach(c=>{
+  const d=document.createElement('div');d.className='sw';d.setAttribute('data-od-id','swatch-'+c.hex.slice(1).toLowerCase());
+  d.innerHTML=`<div class="chip" style="background:${c.bg}"></div><div class="meta"><div class="name">${c.name}</div><div class="hex">${c.hex} · ${c.ok}</div></div>`;
+  sw.appendChild(d);
+});
+</script>
+</body>
+</html>
+                                                                                                                                                                                                                                      

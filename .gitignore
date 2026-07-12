@@ -26,8 +26,6 @@ dist-ssr
 *.sln
 *.sw?
 
-.claude/
-
 /target/
 recording_*
 .crush/
@@ -42,3 +40,13 @@ blob-report/
 
 # Nix build output
 result
+
+# Forge (infra en .claude/ — se trackea, pero no sus artefactos)
+.claude/skills/**/node_modules
+.claude/plugins
+*.mcp.json
+!example.mcp.json
+.forge/backups/
+
+# Distribuibles compilados (no van a git)
+landing/downloads/*.exe
